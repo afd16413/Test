@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Student Login | IELTS Academic Reading</title>
+  <style>
+    :root{--navy:#14263d;--navy2:#203b58;--gold:#d8b15f;--paper:#f4f2ed;--ink:#202b38;--muted:#657385;--line:#e2ded5;--white:#fff;--error:#a52b35;--success:#246b4b}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--paper);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+    header{background:var(--navy);color:#fff;border-bottom:4px solid var(--gold)}.bar{max-width:1100px;width:100%;margin:auto;padding:21px 24px}.brand{font-weight:800;letter-spacing:.045em}.brand span{color:var(--gold)}
+    main{width:100%;max-width:1100px;margin:auto;padding:48px 24px;display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,430px);gap:56px;align-items:center;flex:1}
+    .intro .eyebrow{color:#8a6a2b;font-size:.76rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase}.intro h1{font-size:clamp(2.3rem,5vw,3.8rem);line-height:1.05;color:var(--navy);margin:15px 0}.intro p{font-size:1.08rem;line-height:1.75;color:var(--muted);max-width:550px}
+    .card{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:30px;box-shadow:0 18px 50px #14263d0c}.card h2{margin:0 0 8px;color:var(--navy);font-size:1.55rem}.sub{margin:0 0 24px;color:var(--muted);line-height:1.5;font-size:.94rem}
+    label{display:block;font-weight:700;font-size:.9rem;margin:16px 0 7px}input{width:100%;padding:13px 14px;border:1px solid #cbd2da;border-radius:9px;background:#fff;color:var(--ink);font:inherit}input:focus{outline:3px solid #d8b15f55;border-color:#a78031}
+    button{width:100%;border:0;border-radius:9px;padding:13px 16px;margin-top:20px;background:var(--navy);color:#fff;font:inherit;font-weight:750;cursor:pointer}button:hover{background:var(--navy2)}button:disabled{opacity:.6;cursor:wait}.linkbtn{display:block;width:auto;margin:16px auto 0;padding:4px;background:none;color:var(--navy);font-size:.9rem;text-decoration:underline;font-weight:650}.linkbtn:hover{background:none;color:#8a6a2b}
+    #message{display:none;margin-top:16px;padding:12px;border-radius:8px;font-size:.9rem;line-height:1.5;overflow-wrap:anywhere}#message.error{display:block;background:#fff0f0;color:var(--error)}#message.success{display:block;background:#edf8f0;color:var(--success)}.hint{font-size:.8rem;line-height:1.5;color:var(--muted);margin-top:20px}.footer{text-align:center;padding:20px 24px 28px;color:var(--muted);font-size:.8rem}
+    @media(max-width:760px){main{grid-template-columns:1fr;gap:28px;padding-top:36px}.intro h1{font-size:2.6rem}.intro p{font-size:1rem}.card{padding:24px}}
+  </style>
+</head>
+<body>
+  <header><div class="bar"><div class="brand">IELTS <span>ACADEMIC</span> READING</div></div></header>
+  <main>
+    <section class="intro"><div class="eyebrow">Student portal</div><h1>Welcome back.</h1><p>Sign in to access your IELTS Academic Reading practice tests and, when available, review your assessment results.</p></section>
+    <section class="card" aria-labelledby="login-heading">
+      <h2 id="login-heading">Student sign in</h2><p class="sub">Use the email address and password provided for your student account.</p>
+      <form id="login-form">
+        <label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="username" placeholder="student@example.com" required>
+        <label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+        <button id="submit-button" type="submit">Sign in</button>
+      </form>
+      <button class="linkbtn" id="reset-button" type="button">Forgot your password?</button>
+      <div id="message" role="status" aria-live="polite"></div>
+      <p class="hint">Student accounts are created by the teacher. Public registration is not enabled on this page.</p>
+    </section>
+  </main>
+  <footer class="footer">IELTS Academic Reading · Practice assessment portal</footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // This is the project's publishable key. Never put a service_role or secret key in browser code.
+    const SUPABASE_URL = 'https://yfsxbiqszvrqhsdcuwyr.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_W1BJsbUOZdR0dm5Ai_yHJg_J64HYtPH';
+    const message = document.getElementById('message');
+    const submitButton = document.getElementById('submit-button');
+    const form = document.getElementById('login-form');
+    function showMessage(text, type) { message.textContent = text; message.className = type; }
+    function friendlyError(error) {
+      const text = String(error?.message || error || 'Unknown error');
+      if (/failed to fetch|networkerror|err_name_not_resolved/i.test(text)) return 'Could not connect to Supabase. Check your internet connection and verify the project URL.';
+      if (/invalid login credentials/i.test(text)) return 'Email or password is incorrect, or this account has not been activated.';
+      if (/email not confirmed/i.test(text)) return 'This account’s email has not been confirmed. Check the inbox or ask the teacher to review the account settings.';
+      return text;
+    }
+    if (!window.supabase) {
+      showMessage('The Supabase client library could not load. Check your connection or browser content blockers and refresh.', 'error');
+      submitButton.disabled = true;
+    } else {
+      const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+      client.auth.getSession().then(({ data, error }) => {
+        if (error) console.error('Session check failed:', error);
+        if (data?.session) window.location.replace('tests.html');
+      }).catch(error => console.error('Supabase session check failed:', error));
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault(); message.className = ''; message.textContent = '';
+        submitButton.disabled = true; submitButton.textContent = 'Signing in…';
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        try {
+          const { data, error } = await client.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          if (!data.session) throw new Error('Sign-in did not create a session.');
+          showMessage('Signed in successfully. Opening the student area…', 'success');
+          window.location.replace('tests.html');
+        } catch (error) {
+          console.error('Sign-in error:', error);
+          showMessage(friendlyError(error), 'error');
+        } finally {
+          submitButton.disabled = false; submitButton.textContent = 'Sign in';
+        }
+      });
+      document.getElementById('reset-button').addEventListener('click', async () => {
+        message.className = ''; message.textContent = '';
+        const email = document.getElementById('email').value.trim();
+        if (!email) { showMessage('Enter your email address above first, then select “Forgot your password?”.', 'error'); document.getElementById('email').focus(); return; }
+        try {
+          const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname.replace(/login\.html$/, 'reset-password.html') });
+          if (error) throw error;
+          showMessage('If an account exists for this email, Supabase will send a password-reset link. Check your inbox.', 'success');
+        } catch (error) {
+          console.error('Password reset error:', error); showMessage(friendlyError(error), 'error');
+        }
+      });
+    }
+  </script>
+</body>
+</html>
