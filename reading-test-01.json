@@ -1,0 +1,46 @@
+{
+  "id": "reading-test-01",
+  "title": "The development of the London underground railway",
+  "minutes": 20,
+  "parts": [
+    {
+      "passageTitle": "PASTE PASSAGE TITLE HERE",
+      "instruction": "You should spend about 20 minutes on Questions 1–13, which are based on Reading Passage 1 below.",
+      "paragraphs": [
+        "PASTE PARAGRAPH A HERE",
+        "PASTE PARAGRAPH B HERE"
+      ],
+      "groups": [
+        {
+          "type": "GAP",
+          "heading": "Questions 1–5",
+          "instruction": "Complete the notes below. Choose ONE WORD ONLY from the passage for each answer.",
+          "box": "",
+          "lines": [
+            { "kind": "h", "text": "Sub-heading" },
+            { "kind": "b", "text": "Bullet with a blank for the answer" }
+          ],
+          "numbers": [1, 2, 3, 4, 5]
+        },
+        {
+          "type": "TFNG",
+          "heading": "Questions 6–8",
+          "instruction": "Do the following statements agree with the information given in the passage? Write TRUE, FALSE or NOT GIVEN.",
+          "items": [
+            { "no": 6, "text": "Statement here" },
+            { "no": 7, "text": "Statement here" },
+            { "no": 8, "text": "Statement here" }
+          ]
+        },
+        {
+          "type": "MCQ",
+          "heading": "Question 9",
+          "instruction": "Choose the correct letter, A, B, C or D.",
+          "items": [
+            { "no": 9, "text": "Question here", "options": ["Option A", "Option B", "Option C", "Option D"] }
+          ]
+        }
+      ]
+    }
+  ]
+}
