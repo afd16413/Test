@@ -217,6 +217,8 @@ select { padding: 6px 8px; font-size: 14px; max-width: 100%; border: 1px solid v
     const pct = total ? Math.round(correct / total * 100) : 0;
     const name = $("studentName").value.trim();
 
+    window.saveResult && saveResult(correct, total, responses);
+
     const rows = marks.map(m =>
       `<tr class="${m.ok ? "ok" : "bad"}"><td>${m.no}</td><td>${esc(m.mine || "—")}</td><td>${esc(m.correct)}</td><td>${m.ok ? "✓" : "✗"}</td></tr>`).join("");
 
