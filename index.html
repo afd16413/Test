@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>IELTS Academic Reading</title>
 <style>
+.contact { max-width: 960px; margin: 0 auto 40px; padding: 0 24px; }
+.contact .panel { margin-top: 0; }
+.contact label { display: block; font-weight: 700; font-size: .9rem; margin: 14px 0 6px; }
+.contact input, .contact textarea { width: 100%; padding: 11px 13px; border: 1px solid #cbd2da; border-radius: 9px; font: inherit; }
+.contact button { margin-top: 16px; padding: 12px 18px; border: 0; border-radius: 9px; background: var(--navy); color: #fff; font-weight: 700; cursor: pointer; }
+.contact button:disabled { opacity: .6; }
+#contact-msg { margin-top: 12px; font-size: .9rem; }
 :root{--navy:#13243a;--gold:#d6ad58;--paper:#f5f3ee;--ink:#202a36;--muted:#667384;--white:#fff}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--ink);background:var(--paper);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
 header{background:var(--navy);color:var(--white);border-bottom:4px solid var(--gold)}
@@ -43,6 +50,27 @@ footer{max-width:960px;margin:48px auto 0;padding:22px 24px 32px;color:var(--mut
   <a class="test-link" href="academic-reading-17-test-1.html">Open Academic Reading 17 Test 1</a>
 </section>
 </main>
+  <section class="contact" id="contact">
+  <div class="panel">
+    <h2>Ready to improve your IELTS score?</h2>
+    <p>Create a free account to take practice tests, or send us a message about tutoring.</p>
+    <p style="margin-top:16px"><a class="login-btn" href="register.html">Register</a></p>
+  </div>
+  <div class="panel" style="margin-top:20px">
+    <h2>Contact us about tutoring</h2>
+    <p>Tell us your target band score and when you plan to take the test.</p>
+    <form id="contact-form">
+      <label for="c-name">Name</label>
+      <input id="c-name" required maxlength="100">
+      <label for="c-email">Email</label>
+      <input id="c-email" type="email" required maxlength="254">
+      <label for="c-message">Message</label>
+      <textarea id="c-message" rows="4" required maxlength="2000"></textarea>
+      <button id="contact-button" type="submit">Send message</button>
+    </form>
+    <div id="contact-msg" role="status" aria-live="polite"></div>
+  </div>
+</section>
 <footer>IELTS Academic Reading · Practice platform</footer>
 </body>
 </html>
