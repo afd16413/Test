@@ -274,5 +274,21 @@ select { padding: 6px 8px; font-size: 14px; max-width: 100%; border: 1px solid v
   start();
 })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const sb = window.supabase.createClient(
+    'https://yfsxbiqszvrqhsdcuwyr.supabase.co',
+    'sb_publishable_W1BJsbUOZdR0dm5Ai_yHJg_J64HYtPH'
+  );
+  window.saveResult = async function (score, total, answers) {
+    const { data } = await sb.auth.getSession();
+    if (!data.session) return; // not signed in: nothing saved
+    const { error } = await sb.from('results').insert({
+      test_id: 'academic-reading-17-test-1',
+      score, total, answers
+    });
+    if (error) console.error('Could not save result:', error);
+  };
+</script>
 </body>
 </html>
