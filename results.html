@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My results | IELTS Academic Reading</title>
+<style>
+:root{--navy:#13243a;--gold:#d6ad58;--paper:#f5f3ee;--ink:#202a36;--muted:#667384}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--navy);color:#fff;border-bottom:4px solid var(--gold)}
+.bar{max-width:960px;margin:auto;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{font-weight:750}.brand span{color:var(--gold)}
+.bar a{color:var(--navy);background:var(--gold);text-decoration:none;font-weight:700;padding:8px 14px;border-radius:8px;font-size:.9rem}
+main{max-width:960px;margin:40px auto;padding:0 24px}
+h1{color:var(--navy);margin:0 0 6px}.sub{color:var(--muted);margin:0 0 24px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2ded4;border-radius:12px;overflow:hidden}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid #eee;font-size:.95rem}
+th{background:#faf8f3;color:var(--navy)}
+.empty,.msg{background:#fff;border:1px solid #e2ded4;border-radius:12px;padding:20px;color:var(--muted)}
+.msg.error{color:#a52b35}
+</style>
+</head>
+<body>
+<header><div class="bar"><div class="brand">IELTS <span>ACADEMIC</span> READING</div><a href="index.html">Home</a></div></header>
+<main>
+  <h1>My results</h1>
+  <p class="sub" id="who">Checking your session…</p>
+  <div id="content"></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://yfsxbiqszvrqhsdcuwyr.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_W1BJsbUOZdR0dm5Ai_yHJg_J64HYtPH';
+const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const content = document.getElementById('content');
+const who = document.getElementById('who');
+
+const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+client.auth.getSession().then(async ({ data }) => {
+  if (!data.session) { window.location.replace('login.html'); return; }
+  who.textContent = 'Signed in as ' + data.session.user.email;
+
+  const { data: rows, error } = await client
+    .from('results')
+    .select('test_id, score, total, submitted_at')
+    .order('submitted_at', { ascending: false });
+
+  if (error) {
+    content.innerHTML = '<div class="msg error">Could not load your results: ' + esc(error.message) + '</div>';
+    return;
+  }
+  if (!rows.length) {
+    content.innerHTML = '<div class="empty">No saved results yet. Complete a test while signed in to see it here.</div>';
+    return;
+  }
+  content.innerHTML = '<table><thead><tr><th>Test</th><th>Score</th><th>Percent</th><th>Date</th></tr></thead><tbody>' +
+    rows.map(r => {
+      const pct = r.total ? Math.round(r.score / r.total * 100) : 0;
+      const date = new Date(r.submitted_at).toLocaleString();
+      return `<tr><td>${esc(r.test_id)}</td><td>${r.score} / ${r.total}</td><td>${pct}%</td><td>${esc(date)}</td></tr>`;
+    }).join('') + '</tbody></table>';
+});
+</script>
+</body>
+</html>
