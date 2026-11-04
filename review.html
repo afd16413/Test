@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review answers | IELTS Academic Reading</title>
+<style>
+:root{--navy:#14263d;--gold:#d8b15f;--paper:#f4f2ed;--muted:#657385;--line:#e2ded5;--danger:#a52b35;--success:#246b4b}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--paper);color:#202b38;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--navy);color:#fff;border-bottom:4px solid var(--gold)}
+.bar,main{max-width:960px;margin:auto;padding:22px 24px}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{font-weight:800;letter-spacing:.04em;color:inherit;text-decoration:none}.brand span{color:var(--gold)}
+.bar nav{display:flex;gap:10px;align-items:center}
+.bar a,.bar button{border:0;border-radius:8px;background:#fff;color:var(--navy);padding:9px 14px;font:inherit;font-weight:700;text-decoration:none;cursor:pointer}
+main{padding-top:40px}
+h1,h3,h4{color:var(--navy)}
+h1{margin:0 0 6px}
+h4{margin:0 0 6px}
+p{line-height:1.6;color:var(--muted)}
+.toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:18px 0}
+.toolbar select{padding:9px 10px;border:1px solid #cbd2da;border-radius:8px;font:inherit;background:#fff}
+#status{overflow-wrap:anywhere}
+.sub-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;margin-top:18px}
+.sub-card .head{border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:14px}
+.student-title{margin:36px 0 0;font-size:1.3rem;padding-bottom:4px;border-bottom:2px solid var(--gold)}
+.student-title span{display:block;font-size:.9rem;font-weight:400;color:var(--muted);margin-top:4px}
+.sub-card small{color:var(--muted)}
+.summary{color:var(--navy);font-weight:700;margin:0 0 10px}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+th,td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--line)}
+tr.ok td:last-child{color:var(--success);font-weight:700}
+tr.bad td:last-child{color:var(--danger);font-weight:700}
+.item{margin-top:16px}
+.answer{white-space:pre-wrap;line-height:1.7;background:#faf9f6;border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:0}
+.item audio{width:100%;margin-top:6px}
+.grade{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.grade label{display:block;font-weight:700;font-size:.9rem;margin:10px 0 6px;color:var(--navy)}
+.grade input,.grade textarea{width:100%;padding:10px 12px;border:1px solid #cbd2da;border-radius:8px;font:inherit}
+.grade input.band{width:140px}
+.grade textarea{resize:vertical}
+.grade button{margin-top:12px;border:0;border-radius:8px;background:var(--navy);color:#fff;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}
+.grade button:disabled{opacity:.6}
+.grade .saved{margin-left:12px;color:var(--muted);font-size:.9rem}
+.empty{margin-top:24px}
+.error{color:var(--danger)}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <a class="brand" href="tests.html">IELTS <span>ACADEMIC</span> READING</a>
+    <nav>
+      <a href="tests.html">Tests</a>
+      <a id="navAdmin" href="admin.html" hidden>Admin panel</a>
+      <button id="signout" type="button">Sign out</button>
+    </nav>
+  </div>
+</header>
+<main>
+  <h1>Review answers</h1>
+  <p id="status">Checking your session…</p>
+
+  <div class="toolbar" id="toolbar" hidden>
+    <label for="testFilter"><strong>Test</strong></label>
+    <select id="testFilter"><option value="">All tests</option></select>
+  </div>
+
+  <div id="list"></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://yfsxbiqszvrqhsdcuwyr.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_W1BJsbUOZdR0dm5Ai_yHJg_J64HYtPH';
+const $ = id => document.getElementById(id);
+const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// Band conversion for reading and listening. Each row is [minimum raw score out of 40, band].
+// Scores from this test (13 questions) are scaled to 40 before converting, so treat these
+// bands as an estimate and check them against your official IELTS conversion tables.
+const READING_BANDS = [[39,9],[37,8.5],[35,8],[33,7.5],[30,7],[27,6.5],[23,6],[19,5.5],[15,5],[13,4.5],[10,4],[8,3.5],[6,3],[4,2.5],[3,2],[1,1],[0,0]];
+const LISTENING_BANDS = [[39,9],[37,8.5],[35,8],[32,7.5],[30,7],[26,6.5],[23,6],[18,5.5],[16,5],[13,4.5],[11,4],[10,3.5],[8,3],[6,2.5],[4,2],[3,1.5],[1,1],[0,0]];
+
+function bandFor(kind, correct, total) {
+  const raw = total ? Math.round(correct / total * 40) : 0;
+  const table = kind === 'listening' ? LISTENING_BANDS : READING_BANDS;
+  const row = table.find(([min]) => raw >= min);
+  return row ? row[1] : 0;
+}
+
+const TEST_NAMES = { 'academic-reading-17-test-1': 'Academic Reading 17 Test 1' };
+
+if (!window.supabase) {
+  $('status').textContent = 'Could not load the Supabase client library. Check your connection and refresh.';
+} else {
+  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  let testTitles = { ...TEST_NAMES }, profiles = {};
+
+  function studentLabel(uid) {
+    const p = profiles[uid];
+    if (!p) return { name: 'Unknown student', email: uid };
+    return { name: p.full_name || 'No name given', email: p.email };
+  }
+
+  function fmtDate(v) { return new Date(v).toLocaleString(); }
+
+  function attemptBody(s) {
+    const a = s.answers || {};
+    const items = a.items || [];
+    const correct = Number(a.score) || 0;
+    const total = Number(a.total) || items.length;
+    const band = bandFor(s.kind, correct, total);
+    const rows = items.map(m => `<tr class="${m.ok ? 'ok' : 'bad'}">
+        <td>${esc(m.no)}</td><td>${esc(m.mine || '—')}</td><td>${esc(m.correct)}</td><td>${m.ok ? '✓' : '✗'}</td></tr>`).join('');
+    return `
+      <p class="summary">${correct} / ${total} correct · estimated band ${band} out of 9</p>
+      <table>
+        <thead><tr><th>Q</th><th>Student answer</th><th>Correct answer</th><th></th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="4">No item details were saved for this attempt.</td></tr>'}</tbody>
+      </table>`;
+  }
+
+  function writingBody(s) {
+    return (s.answers || []).map(a => `
+      <div class="item">
+        <h4>Task ${esc(a.task)}: ${esc(a.title)}</h4>
+        <p class="answer">${esc(a.text) || '<em>No answer</em>'}</p>
+        <small>${esc(a.words ?? 0)} words</small>
+      </div>`).join('') || '<p>No answers.</p>';
+  }
+
+  function speakingBody(s) {
+    return ((s.answers && s.answers.recordings) || []).map(r => `
+      <div class="item">
+        <h4>Part ${esc(r.part)}: ${esc(r.title)}</h4>
+        <audio controls preload="none" data-path="${esc(r.path)}"></audio>
+      </div>`).join('') || '<p>No recordings.</p>';
+  }
+
+  function renderCard(s) {
+    const testName = testTitles[s.test_id] || s.test_id;
+    const isScored = s.kind === 'writing' || s.kind === 'speaking';
+    let body;
+    if (s.kind === 'writing') body = writingBody(s);
+    else if (s.kind === 'speaking') body = speakingBody(s);
+    else body = attemptBody(s);
+
+    const reviewed = s.reviewed_at ? `Last reviewed ${fmtDate(s.reviewed_at)}` : 'Not reviewed yet';
+    return `<article class="sub-card" data-id="${esc(s.id)}">
+      <div class="head">
+        <small>${esc(testName)} · ${esc(s.kind)} · ${esc(fmtDate(s.created_at))}</small>
+      </div>
+      ${body}
+      <div class="grade">
+        ${isScored ? `
+          <label>Band (out of 9, steps of 0.5)</label>
+          <input class="band" type="number" min="0" max="9" step="0.5" value="${s.band ?? ''}">` : ''}
+        <label>Teacher comment</label>
+        <textarea class="comment" rows="3">${esc(s.teacher_comment || '')}</textarea>
+        <button class="save" type="button">Save review</button>
+        <span class="saved">${esc(reviewed)}</span>
+      </div>
+    </article>`;
+  }
+
+  async function saveReview(card) {
+    const id = card.dataset.id;
+    const update = { teacher_comment: card.querySelector('.comment').value.trim() || null, reviewed_at: new Date().toISOString() };
+    const bandEl = card.querySelector('.band');
+    if (bandEl) {
+      if (bandEl.value === '') update.band = null;
+      else {
+        const band = Number(bandEl.value);
+        if (!(band >= 0 && band <= 9 && (band * 2) % 1 === 0)) { alert('The band must be between 0 and 9, in steps of 0.5.'); return; }
+        update.band = band;
+      }
+    }
+    const button = card.querySelector('.save');
+    button.disabled = true;
+    const { error } = await client.from('submissions').update(update).eq('id', id);
+    button.disabled = false;
+    if (error) { alert('Could not save the review: ' + error.message); return; }
+    card.querySelector('.saved').textContent = `Last reviewed ${fmtDate(update.reviewed_at)}`;
+  }
+
+  // Speaking recordings are private, so each one gets a short-lived link when shown.
+  async function loadRecordingLinks() {
+    for (const el of document.querySelectorAll('audio[data-path]')) {
+      const { data, error } = await client.storage.from('speaking-recordings').createSignedUrl(el.dataset.path, 3600);
+      if (error) { el.insertAdjacentHTML('afterend', `<p class="error">Could not load recording: ${esc(error.message)}</p>`); continue; }
+      el.src = data.signedUrl;
+    }
+  }
+
+  async function loadSubmissions() {
+    const filter = $('testFilter').value;
+    let query = client.from('submissions').select('id,test_id,user_id,kind,answers,band,teacher_comment,reviewed_at,created_at').order('created_at', { ascending: false });
+    if (filter) query = query.eq('test_id', filter);
+    const { data, error } = await query;
+    if (error) { $('list').innerHTML = `<p class="error">Could not load answers: ${esc(error.message)}</p>`; return; }
+    if (!data.length) { $('list').innerHTML = '<p class="empty">No answers yet.</p>'; return; }
+    // Group the answers under one title per student: name, then email.
+    const groups = new Map();
+    data.forEach(s => {
+      if (!groups.has(s.user_id)) groups.set(s.user_id, []);
+      groups.get(s.user_id).push(s);
+    });
+    $('list').innerHTML = [...groups].map(([uid, items]) => {
+      const who = studentLabel(uid);
+      return `<section class="student">
+        <h2 class="student-title">${esc(who.name)}
+          <span>${esc(who.email)} · ${items.length} ${items.length === 1 ? 'answer' : 'answers'}</span>
+        </h2>
+        ${items.map(renderCard).join('')}
+      </section>`;
+    }).join('');
+    loadRecordingLinks();
+  }
+
+  async function init() {
+    const { data: session } = await client.auth.getSession();
+    if (!session.session) { window.location.replace('login.html'); return; }
+    const uid = session.session.user.id;
+
+    const { data: admin } = await client.from('admins').select('user_id').eq('user_id', uid).maybeSingle();
+    if (!admin) { window.location.replace('tests.html'); return; }
+
+    $('status').textContent = 'Signed in as ' + session.session.user.email + '.';
+    $('navAdmin').hidden = false;
+    $('toolbar').hidden = false;
+
+    const [tests, profs] = await Promise.all([
+      client.from('tests').select('id,title').order('created_at', { ascending: true }),
+      client.from('profiles').select('id,full_name,email'),
+    ]);
+    if (tests.error) console.error(tests.error);
+    if (profs.error) console.error(profs.error);
+    (tests.data || []).forEach(t => {
+      testTitles[t.id] = t.title;
+      $('testFilter').insertAdjacentHTML('beforeend', `<option value="${esc(t.id)}">${esc(t.title)}</option>`);
+    });
+    if (!tests.error) {
+      $('testFilter').insertAdjacentHTML('beforeend', `<option value="academic-reading-17-test-1">${esc(TEST_NAMES['academic-reading-17-test-1'])}</option>`);
+    }
+    (profs.data || []).forEach(p => { profiles[p.id] = p; });
+
+    $('testFilter').addEventListener('change', loadSubmissions);
+    $('list').addEventListener('click', e => {
+      const btn = e.target.closest('.save');
+      if (btn) saveReview(btn.closest('.sub-card'));
+    });
+    await loadSubmissions();
+  }
+
+  init().catch(err => { $('status').textContent = 'Something went wrong: ' + (err.message || err); });
+
+  $('signout').addEventListener('click', async () => {
+    await client.auth.signOut();
+    window.location.replace('login.html');
+  });
+}
+</script>
+</body>
+</html>

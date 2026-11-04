@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test editor</title>
+<style>
+:root {
+  --navy: #1f2d5c; --navy-2: #2c3f7d; --navy-soft: #e8ecf5;
+  --gold: #f4c542; --gold-2: #e6b530;
+  --bg: #f2f4f8; --panel-2: #fafbfd;
+  --line: #dfe3ec; --line-2: #c4cbda;
+  --text: #1c2433; --muted: #5d6679;
+  --danger: #b42318; --danger-bg: #fdecea;
+  --success: #17703a;
+  --shadow: 0 1px 2px rgba(16,24,40,.05), 0 4px 14px rgba(16,24,40,.06);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.5; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.hidden { display: none !important; }
+.spacer { flex: 1; }
+.container { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+.header { display: flex; align-items: center; gap: 14px; background: var(--navy); color: #fff; padding: 12px 24px; }
+.brand { font-weight: 700; font-size: 17px; }
+.brand span { font-weight: 400; opacity: .75; }
+.header small { opacity: .75; font-size: 13px; }
+
+.toolbar { background: #fff; border-bottom: 1px solid var(--line); padding: 12px 0; position: sticky; top: 0; z-index: 20; }
+.toolbar .container { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.status { font-size: 13px; color: var(--muted); margin-right: 6px; }
+.status.bad { color: var(--danger); font-weight: 600; }
+.status.good { color: var(--success); font-weight: 600; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid transparent; border-radius: 6px; padding: 8px 14px; background: var(--gold); color: var(--navy); font-weight: 600; font-size: 14px; cursor: pointer; white-space: nowrap; }
+.btn:hover { background: var(--gold-2); }
+.btn.outline { background: #fff; color: var(--navy); border-color: var(--line-2); }
+.btn.outline:hover { background: var(--navy-soft); }
+.btn.danger { background: var(--danger-bg); color: var(--danger); }
+.btn.sm { padding: 5px 10px; font-size: 13px; }
+
+.field { width: 100%; border: 1px solid var(--line-2); border-radius: 6px; background: #fff; padding: 8px 10px; font-size: 14px; }
+textarea.field { resize: vertical; min-height: 72px; }
+.field:focus { outline: 2px solid rgba(244,197,66,.9); outline-offset: 0; }
+.lbl { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin: 12px 0 4px; }
+.check { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; margin-right: 16px; }
+.hint { font-size: 13px; color: var(--muted); margin: 8px 0; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.errors { margin-top: 14px; }
+.errors div { background: var(--danger-bg); color: var(--danger); border-radius: 6px; padding: 8px 12px; margin: 6px 0; font-size: 14px; }
+.editor-body { padding: 20px 0 60px; }
+.card { background: #fff; border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 16px; }
+.card.sub { box-shadow: none; background: var(--panel-2); margin: 14px 0; }
+.card-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.card-head h3 { margin: 0; flex: 1; font-size: 16px; color: var(--navy); }
+.card h4 { margin: 18px 0 8px; font-size: 12px; letter-spacing: .6px; text-transform: uppercase; color: var(--muted); }
+.row { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.row .field { flex: 1; min-width: 0; }
+.row select { flex: 0 0 auto; }
+.idx { min-width: 24px; font-weight: 700; color: var(--navy); text-align: center; }
+.item { border: 1px dashed var(--line-2); border-radius: 8px; padding: 12px; margin: 10px 0; background: var(--panel-2); }
+.indent { margin-left: 30px; }
+.nums { font-size: 12px; background: var(--navy-soft); color: var(--navy); padding: 3px 9px; border-radius: 999px; font-weight: 600; }
+select { padding: 6px 8px; font-size: 14px; border: 1px solid var(--line-2); border-radius: 6px; background: #fff; }
+.actions { margin-top: 8px; }
+
+@media (max-width: 820px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .indent { margin-left: 12px; }
+  .container { padding: 0 14px; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <a class="brand" href="index.html" style="color:inherit;text-decoration:none">IELTS <span>Test editor</span></a>
+  <div class="spacer"></div>
+  <small>Each saved test is a single HTML file</small>
+</header>
+
+<div class="toolbar">
+  <div class="container">
+    <a class="btn outline sm" href="index.html" style="text-decoration:none">Home</a>
+    <button class="btn outline sm" data-act="new">New test</button>
+    <button class="btn outline sm" data-act="example">Load example</button>
+    <label class="btn outline sm" style="cursor:pointer">Open test file
+      <input type="file" id="openFile" accept=".html,.js,.json,application/json" hidden>
+    </label>
+    <span class="spacer"></span>
+    <span id="status" class="status"></span>
+    <button class="btn outline sm" data-act="preview">Preview</button>
+    <button class="btn sm" data-act="publish">Publish to site</button>
+    <button class="btn sm" data-act="save">Save test file</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="errors" id="errors"></div>
+  <main class="editor-body" id="editor"></main>
+</div>
+
+<!--
+  The template every saved test is built from. It is a complete, standalone test page.
+  __TEST_DATA__ is replaced with the test. "<\/script>" is written this way so it does
+  not end this script block early; the editor restores it when building a page.
+-->
+<script type="text/plain" id="test-template"><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reading test</title>
+<style>
+:root { --navy: #1f2d5c; --navy-2: #2c3f7d; --navy-soft: #e8ecf5; --gold: #f4c542; --gold-2: #e6b530; --bg: #f2f4f8; --line: #dfe3ec; --line-2: #c4cbda; --text: #1c2433; --muted: #5d6679; --danger: #b42318; --danger-bg: #fdecea; --success: #17703a; --shadow: 0 1px 2px rgba(16,24,40,.05), 0 4px 14px rgba(16,24,40,.06); }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.5; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.header { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: var(--navy); color: #fff; padding: 12px 24px; box-shadow: 0 2px 10px rgba(15,23,42,.18); }
+.brand { font-weight: 700; font-size: 17px; white-space: nowrap; }
+.brand span { font-weight: 400; opacity: .75; }
+a.brand { color: inherit; text-decoration: none; }
+.test-title { flex: 1; min-width: 140px; font-size: 14px; opacity: .9; }
+.timer { min-width: 76px; text-align: center; background: #fff; color: var(--navy); padding: 6px 12px; border-radius: 6px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.timer.warn { background: var(--gold); }
+.btn { background: var(--gold); color: var(--navy); border: none; border-radius: 6px; padding: 8px 14px; font-weight: 600; font-size: 14px; cursor: pointer; }
+.btn:hover { background: var(--gold-2); }
+.btn:disabled { opacity: .5; cursor: default; background: var(--gold); }
+.parts { display: flex; gap: 2px; flex-wrap: wrap; background: #fff; border-bottom: 1px solid var(--line); padding: 0 24px; }
+.parts button { background: none; border: none; border-bottom: 3px solid transparent; color: var(--muted); font-size: 14px; font-weight: 600; padding: 12px 16px; cursor: pointer; }
+.parts button.active { color: var(--navy); border-bottom-color: var(--navy); }
+.split { display: grid; grid-template-columns: 1fr 1fr; height: calc(100vh - 112px); }
+.passage, .questions { overflow: auto; padding: 28px 36px 64px; }
+.passage { background: #fff; border-right: 1px solid var(--line); line-height: 1.75; }
+.passage h2 { margin: 0 0 16px; color: var(--navy); font-size: 22px; }
+.passage p { margin: 0 0 14px; text-align: justify; }
+.questions { background: var(--bg); }
+.instr { font-weight: 600; margin-bottom: 18px; padding: 12px 14px; background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--navy); border-radius: 6px; }
+.qhead { margin-top: 26px; color: var(--navy); font-weight: 700; font-size: 16px; }
+.qinstr { margin: 4px 0 12px; color: var(--muted); font-style: italic; white-space: pre-line; }
+.notes { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px; }
+.nbox { text-align: center; font-size: 18px; margin: 0 0 8px; }
+.nh, .noteline, .nt { line-height: 2; margin: 8px 0; }
+.nh { font-weight: 700; }
+.optbox { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; }
+.optbox div { margin: 4px 0; }
+.stmt { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
+.stmt-text { margin-bottom: 8px; }
+.tf label { display: inline-block; margin-right: 18px; cursor: pointer; font-size: 14px; }
+.opt { display: block; cursor: pointer; font-size: 14px; margin: 5px 0; }
+.qno { display: inline-block; min-width: 26px; height: 22px; line-height: 22px; padding: 0 5px; text-align: center; background: var(--navy); color: #fff; border-radius: 4px; font-size: 12px; font-weight: 700; vertical-align: middle; margin-right: 6px; }
+input.gap { width: 140px; padding: 4px 7px; border: 1px solid var(--line-2); border-radius: 4px; font-size: 14px; margin: 0 4px; vertical-align: middle; background: #fff; }
+input.short { width: 100%; max-width: 320px; padding: 7px 9px; border: 1px solid var(--line-2); border-radius: 6px; font-size: 14px; }
+select { padding: 6px 8px; font-size: 14px; max-width: 100%; border: 1px solid var(--line-2); border-radius: 6px; background: #fff; }
+.result { background: #fff; border: 1px solid var(--navy); border-top: 4px solid var(--navy); border-radius: 8px; padding: 18px 20px; margin-bottom: 22px; box-shadow: var(--shadow); }
+.result h3 { margin: 0 0 6px; color: var(--navy); }
+.result table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+.result th, .result td { padding: 7px 8px; text-align: left; border-bottom: 1px solid var(--line); }
+.result tr.ok td:last-child { color: var(--success); font-weight: 700; }
+.result tr.bad td:last-child { color: var(--danger); font-weight: 700; }
+.msg { background: var(--danger-bg); color: var(--danger); padding: 12px 14px; border-radius: 6px; margin: 24px; }
+@media (max-width: 820px) {
+  .split { grid-template-columns: 1fr; height: auto; }
+  .passage, .questions { padding: 20px 16px 40px; overflow: visible; }
+  .header { padding: 10px 14px; }
+  .parts { padding: 0 14px; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>window.TEST_DATA = __TEST_DATA__;<\/script>
+<script>
+(function () {
+  const TEST = window.TEST_DATA;
+  const $ = id => document.getElementById(id);
+  const L = i => String.fromCharCode(65 + i);
+  const TF = { TFNG: ["TRUE", "FALSE", "NOT GIVEN"], YNNG: ["YES", "NO", "NOT GIVEN"] };
+  const esc = v => String(v == null ? "" : v).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const norm = v => String(v == null ? "" : v).toLowerCase().replace(/[.,;:!?]+$/, "").replace(/\s+/g, " ").trim();
+
+  const SHELL = `
+    <header class="header">
+      <a class="brand" href="index.html">IELTS <span>Academic Reading</span></a>
+      <div class="test-title" id="testTitle"></div>
+      <div class="timer" id="timer">--:--</div>
+      <button class="btn" id="submitBtn" type="button">Submit</button>
+    </header>
+    <nav class="parts" id="partTabs"></nav>
+    <main class="split">
+      <section class="passage" id="passage"></section>
+      <section class="questions" id="questions"></section>
+    </main>`;
+
+  const responses = {};
+  let part = 0, submitted = false, secondsLeft = 0, timerId = null, resultHTML = "";
+
+  function badge(nos) {
+    const text = nos.length > 1 ? `${nos[0]}–${nos[nos.length - 1]}` : nos[0];
+    return `<span class="qno">${text}</span>`;
+  }
+
+  function renderAll() {
+    const p = TEST.parts[part];
+    const showLabels = TEST.labels !== false;
+
+    $("partTabs").innerHTML = TEST.parts.map((_, i) =>
+      `<button class="${i === part ? "active" : ""}" data-part="${i}">Reading Passage ${i + 1}</button>`).join("");
+
+    $("passage").innerHTML = (p.audioUrl ? `<audio controls preload="metadata" src="${esc(p.audioUrl)}" style="width:100%;margin-bottom:18px"></audio>` : "") + `<h2>${esc(p.passageTitle)}</h2>` +
+      (p.paragraphs || []).map((t, i) =>
+        `<p>${showLabels ? `<strong>${L(i)}</strong>&nbsp;&nbsp;` : ""}${esc(t)}</p>`).join("");
+
+    $("questions").innerHTML = resultHTML +
+      (p.instruction ? `<div class="instr">${esc(p.instruction)}</div>` : "") +
+      (p.groups || []).map(renderGroup).join("");
+  }
+
+  function renderGroup(g) {
+    const dis = submitted ? "disabled" : "";
+    const head = `<div class="qhead">${esc(g.heading)}</div>` +
+      (g.instruction ? `<div class="qinstr">${esc(g.instruction)}</div>` : "");
+
+    if (g.type === "GAP") {
+      const body = (g.lines || []).map(line => {
+        const cls = line.kind === "h" ? "nh" : line.kind === "t" ? "nt" : "noteline";
+        const html = esc(line.text).replace(/\{(\d+)\}/g, (_, no) =>
+          `<span class="qno">${no}</span><input class="gap" data-no="${no}" value="${esc(responses[no] || "")}" ${dis} autocomplete="off" spellcheck="false">`);
+        return `<p class="${cls}">${html}</p>`;
+      }).join("");
+      return head + `<div class="notes">${g.box ? `<h3 class="nbox">${esc(g.box)}</h3>` : ""}${body}</div>`;
+    }
+
+    if (g.type === "MATCH") {
+      const options = (g.options || []).map((o, i) => `<div><b>${L(i)}</b> ${esc(o)}</div>`).join("");
+      const rows = (g.items || []).map(item => {
+        const no = item.nos[0];
+        const opts = (g.options || []).map((o, i) =>
+          `<option value="${L(i)}" ${responses[no] === L(i) ? "selected" : ""}>${L(i)} — ${esc(o)}</option>`).join("");
+        return `<div class="stmt">
+          <div class="stmt-text">${badge(item.nos)}${esc(item.text)}</div>
+          <select data-no="${no}" ${dis}><option value="">— choose —</option>${opts}</select>
+        </div>`;
+      }).join("");
+      return head + `<div class="optbox"><strong>Options</strong>${options}</div>` + rows;
+    }
+
+    return head + (g.items || []).map(item => renderItem(g, item, dis)).join("");
+  }
+
+  function renderItem(g, item, dis) {
+    const no = item.nos[0];
+
+    if (g.type === "TFNG" || g.type === "YNNG") {
+      const opts = TF[g.type].map(o =>
+        `<label><input type="radio" name="q${no}" value="${o}" data-no="${no}" ${responses[no] === o ? "checked" : ""} ${dis}> ${o}</label>`).join("");
+      return `<div class="stmt"><div class="stmt-text">${badge(item.nos)}${esc(item.text)}</div><div class="tf">${opts}</div></div>`;
+    }
+
+    if (g.type === "MCQ") {
+      if (item.multi) {
+        const chosen = Array.isArray(responses[no]) ? responses[no] : [];
+        const opts = (item.options || []).map((o, i) => {
+          const l = L(i);
+          return `<label class="opt"><input type="checkbox" data-no="${no}" value="${l}" ${chosen.includes(l) ? "checked" : ""} ${dis}> ${l}. ${esc(o)}</label>`;
+        }).join("");
+        return `<div class="stmt"><div class="stmt-text">${badge(item.nos)}${esc(item.text)}</div>${opts}</div>`;
+      }
+      const opts = (item.options || []).map((o, i) => {
+        const l = L(i);
+        return `<label class="opt"><input type="radio" name="q${no}" value="${l}" data-no="${no}" ${responses[no] === l ? "checked" : ""} ${dis}> ${l}. ${esc(o)}</label>`;
+      }).join("");
+      return `<div class="stmt"><div class="stmt-text">${badge(item.nos)}${esc(item.text)}</div>${opts}</div>`;
+    }
+
+    return `<div class="stmt">
+      <div class="stmt-text">${badge(item.nos)}${esc(item.text)}</div>
+      <input class="short" type="text" data-no="${no}" value="${esc(responses[no] || "")}" ${dis} autocomplete="off">
+    </div>`;
+  }
+
+  function onAnswer(e) {
+    const el = e.target;
+    if (submitted || !el.dataset.no) return;
+    const no = el.dataset.no;
+
+    if (el.type === "checkbox") {
+      const set = new Set(Array.isArray(responses[no]) ? responses[no] : []);
+      if (el.checked) set.add(el.value);
+      else set.delete(el.value);
+      responses[no] = [...set];
+    } else if (el.type !== "radio" || el.checked) {
+      responses[no] = el.value;
+    }
+  }
+
+  function markItem(item) {
+    if (item.multi) {
+      const selected = Array.isArray(responses[item.nos[0]]) ? responses[item.nos[0]] : [];
+      const expected = item.answers;
+      const ok = selected.length === expected.length && expected.every(a => selected.includes(a));
+      return item.nos.map((no, i) => ({ no, ok, mine: selected.join(", "), correct: expected[i] == null ? "" : expected[i] }));
+    }
+    const no = item.nos[0];
+    const mine = responses[no] || "";
+    const ok = mine !== "" && item.answers.some(a => norm(a) === norm(mine));
+    return [{ no, ok, mine, correct: item.answers.join(" / ") }];
+  }
+
+  function submitTest(auto) {
+    if (submitted) return;
+    submitted = true;
+    clearInterval(timerId);
+    $("submitBtn").disabled = true;
+
+    const marks = TEST.parts
+      .flatMap(p => (p.groups || []).flatMap(g => (g.items || []).flatMap(item => markItem(item))))
+      .sort((a, b) => a.no - b.no);
+
+    const correct = marks.filter(m => m.ok).length;
+    const total = marks.length;
+    const pct = total ? Math.round(correct / total * 100) : 0;
+
+    window.saveResult && saveResult(correct, total, responses, marks);
+
+    const rows = marks.map(m =>
+      `<tr class="${m.ok ? "ok" : "bad"}"><td>${m.no}</td><td>${esc(m.mine || "—")}</td><td>${esc(m.correct)}</td><td>${m.ok ? "✓" : "✗"}</td></tr>`).join("");
+
+    resultHTML = `<div class="result">
+      <h3>Your result${auto ? " (time up)" : ""}</h3>
+      <p><strong>${correct} / ${total}</strong> correct (${pct}%)</p>
+      <table>
+        <thead><tr><th>Q</th><th>Your answer</th><th>Correct answer</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+
+    renderAll();
+    $("questions").scrollTop = 0;
+  }
+
+  function updateTimer() {
+    const left = Math.max(0, secondsLeft);
+    $("timer").textContent = `${String(Math.floor(left / 60)).padStart(2, "0")}:${String(left % 60).padStart(2, "0")}`;
+    $("timer").classList.toggle("warn", left <= 300);
+  }
+
+  function start() {
+    if (!TEST || !Array.isArray(TEST.parts) || !TEST.parts.length) {
+      document.getElementById("app").innerHTML = '<div class="msg">This test file is damaged.</div>';
+      return;
+    }
+
+    document.getElementById("app").innerHTML = SHELL;
+    document.title = TEST.title || "Reading test";
+    $("testTitle").textContent = TEST.title || "Untitled test";
+    secondsLeft = (Number(TEST.time) || 20) * 60;
+
+    $("submitBtn").addEventListener("click", () => {
+      if (confirm("Submit the test now?")) submitTest(false);
+    });
+    $("questions").addEventListener("input", onAnswer);
+    $("questions").addEventListener("change", onAnswer);
+    $("partTabs").addEventListener("click", e => {
+      const b = e.target.closest("[data-part]");
+      if (b) { part = Number(b.dataset.part); renderAll(); }
+    });
+
+    updateTimer();
+    timerId = setInterval(() => {
+      if (submitted) return;
+      secondsLeft--;
+      updateTimer();
+      if (secondsLeft <= 0) submitTest(true);
+    }, 1000);
+
+    renderAll();
+  }
+
+  start();
+})();
+<\/script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>
+<script>
+  window.saveResult = async function (score, total, answers, marks) {
+    if (!window.supabase || !window.TEST_DATA || !window.TEST_DATA.id) return;
+    const sb = window.supabase.createClient(
+      'https://yfsxbiqszvrqhsdcuwyr.supabase.co',
+      'sb_publishable_W1BJsbUOZdR0dm5Ai_yHJg_J64HYtPH'
+    );
+    const { data } = await sb.auth.getSession();
+    if (!data.session) return; // not signed in: nothing saved
+    const { error } = await sb.from('results').insert({
+      test_id: window.TEST_DATA.id,
+      score, total, answers
+    });
+    if (error) console.error('Could not save result:', error);
+    // Teachers review attempts from "submissions", with each answer and the correct one.
+    const kind = window.TEST_DATA.type === 'listening' ? 'listening' : 'reading';
+    const { error: subError } = await sb.from('submissions').insert({
+      test_id: window.TEST_DATA.id,
+      kind,
+      answers: { score, total, items: marks || [] }
+    });
+    if (subError) console.error('Could not save submission:', subError);
+  };
+<\/script>
+</body>
+</html>
+</script>
+
+<script>
+/* =====================================================================
+   Editor
+   ===================================================================== */
+const DRAFT_KEY = "ielts-test-editor-draft-v1";
+const TEST_TYPES = [["reading", "Reading"], ["listening", "Listening"], ["writing", "Writing"], ["speaking", "Speaking"]];
+const TYPES = [
+  ["GAP", "Notes / gap fill"],
+  ["TFNG", "True / False / Not Given"],
+  ["YNNG", "Yes / No / Not Given"],
+  ["MCQ", "Multiple choice"],
+  ["MATCH", "Matching (headings, features…)"],
+  ["SHORT", "Short answer"]
+];
+const TF = { TFNG: ["TRUE", "FALSE", "NOT GIVEN"], YNNG: ["YES", "NO", "NOT GIVEN"] };
+
+const EXAMPLE = {
+  title: "Example: Urban Beekeeping",
+  time: 20,
+  labels: true,
+  parts: [{
+    passageTitle: "Urban beekeeping",
+    instruction: "Read the passage below and answer Questions 1–5.",
+    paragraphs: [
+      "Urban beekeeping has grown quickly over the past two decades. In many large cities, flat rooftops and community gardens now house hives that would once have been found only in the countryside.",
+      "Supporters say that city hives help offset the decline of wild pollinators. Critics, however, warn that a dense concentration of hives can strain wild bee species that compete for the same flowers.",
+      "Experienced keepers agree that success depends on planning. Hives need a nearby water source, a sheltered position and neighbours who do not object."
+    ],
+    groups: [
+      {
+        type: "TFNG", heading: "Questions 1–2",
+        instruction: "Do the following statements agree with the information in the passage? Write TRUE, FALSE or NOT GIVEN.",
+        box: "", lines: [], options: [],
+        items: [
+          { text: "Urban beekeeping has grown in recent decades.", answer: "TRUE", options: [], correct: [], alts: "" },
+          { text: "Most urban beekeepers sell their honey commercially.", answer: "NOT GIVEN", options: [], correct: [], alts: "" }
+        ]
+      },
+      {
+        type: "GAP", heading: "Questions 3–5",
+        instruction: "Complete the notes below. Choose ONE WORD ONLY from the passage for each answer.",
+        box: "Key points", items: [], options: [],
+        lines: [
+          { kind: "h", text: "Requirements" },
+          { kind: "b", text: "Every hive needs a nearby [water] source." },
+          { kind: "b", text: "Hives should be placed in a [sheltered] position." },
+          { kind: "t", text: "Hives may strain wild [bee] species." }
+        ]
+      }
+    ]
+  }]
+};
+
+const $ = id => document.getElementById(id);
+const esc = v => String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const L = i => String.fromCharCode(65 + i);
+const letterIndex = l => String(l || "").toUpperCase().charCodeAt(0) - 65;
+const clone = o => JSON.parse(JSON.stringify(o));
+const slugify = v => String(v || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "test";
+
+let doc = loadDraft();
+
+// Opened from a group on the Manage tests page: put the new test into that group.
+const presetSeries = new URLSearchParams(window.location.search).get("series");
+if (presetSeries) { doc.series = presetSeries; saveDraft(); }
+
+function loadDraft() {
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
+    if (d && Array.isArray(d.parts)) return d;
+  } catch {}
+  return clone(EXAMPLE);
+}
+
+function saveDraft() {
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(doc)); } catch {}
+}
+
+function blankItem(type) {
+  const base = { text: "", answer: "", options: [], correct: [], alts: "" };
+  if (type === "TFNG") base.answer = "TRUE";
+  if (type === "YNNG") base.answer = "YES";
+  if (type === "MATCH") base.answer = "A";
+  if (type === "MCQ") base.options = ["", "", ""];
+  return base;
+}
+function blankGroup(type) { return { type, heading: "", instruction: "", box: "", lines: [], items: [], options: [] }; }
+function blankPassage() { return { passageTitle: "", instruction: "", paragraphs: [""], groups: [] }; }
+function blankDoc() { return { title: "New test", series: "Academic Test 17", label: "", type: "reading", time: 20, labels: true, parts: [blankPassage()] }; }
+
+/* ---------- Compile the editor format into the test format ---------- */
+function compile(d) {
+  const errors = [];
+  let counter = 0;
+  const next = () => ++counter;
+
+  const parts = (d.parts || []).map((p, pi) => {
+    const where = `Passage ${pi + 1}`;
+    const paragraphs = (p.paragraphs || []).map(s => String(s).trim()).filter(Boolean);
+    const type = d.type || "reading";
+    const hasAudio = type === "listening" && !!p.audioUrl;
+    if (type === "listening" && !p.audioUrl) errors.push(`${where}: upload the audio file`);
+    const hasImage = type === "writing" && !!p.imageUrl;
+    if (!paragraphs.length && !hasAudio && !hasImage) errors.push(`${where}: add at least one ${type === "writing" ? "task prompt" : "paragraph"}`);
+    const groups = (type === "writing" || type === "speaking")
+      ? []
+      : (p.groups || []).map((g, gi) => compileGroup(g, next, errors, `${where}, question group ${gi + 1}`));
+    return {
+      passageTitle: p.passageTitle || `Passage ${pi + 1}`, instruction: p.instruction || "", instruction2: p.instruction2 || "", paragraphs, groups,
+      audioUrl: p.audioUrl || "", imageUrl: p.imageUrl || "", minWords: Math.max(0, Number(p.minWords) || 0)
+    };
+  });
+
+  if (!parts.length) errors.push("Add at least one passage");
+
+  return {
+    test: { title: d.title || "Untitled test", type: d.type || "reading", time: Math.max(1, Number(d.time) || 20), labels: d.labels !== false, parts },
+    errors,
+    count: counter
+  };
+}
+
+function compileGroup(g, next, errors, where) {
+  const out = { type: g.type, heading: g.heading || "", instruction: g.instruction || "", items: [] };
+
+  if (g.type === "GAP") {
+    out.box = g.box || "";
+    out.lines = [];
+    let gaps = 0;
+    (g.lines || []).forEach(line => {
+      const raw = String(line.text || "");
+      if (!raw.trim()) return;
+      const text = raw.replace(/\[([^\]]+)\]/g, (_, inner) => {
+        const no = next();
+        gaps++;
+        out.items.push({ nos: [no], answers: inner.split("/").map(v => v.trim()).filter(Boolean) });
+        return `{${no}}`;
+      });
+      out.lines.push({ kind: line.kind || "b", text });
+    });
+    if (!gaps) errors.push(`${where}: add at least one answer in [square brackets]`);
+  } else if (g.type === "MATCH") {
+    out.options = [...(g.options || [])];
+    if (out.options.length < 2) errors.push(`${where}: add at least two options`);
+    if (out.options.some(o => !String(o).trim())) errors.push(`${where}: some options are empty`);
+    (g.items || []).forEach((item, i) => {
+      const no = next();
+      if (!String(item.text || "").trim()) errors.push(`${where}, item ${i + 1}: type the item text`);
+      if (!/^[A-Z]$/.test(item.answer || "") || letterIndex(item.answer) >= out.options.length) {
+        errors.push(`${where}, item ${i + 1}: choose the correct heading`);
+      }
+      out.items.push({ nos: [no], text: item.text || "", answers: [item.answer || ""] });
+    });
+  } else if (g.type === "MCQ") {
+    (g.items || []).forEach((item, i) => {
+      const w = `${where}, item ${i + 1}`;
+      const opts = item.options || [];
+      const correct = [...(item.correct || [])].sort();
+      if (!String(item.text || "").trim()) errors.push(`${w}: type the question`);
+      if (opts.filter(o => String(o).trim()).length < 2) errors.push(`${w}: add at least two options`);
+      if (!correct.length) errors.push(`${w}: tick the correct answer`);
+      const nos = Array.from({ length: Math.max(1, correct.length) }, () => next());
+      out.items.push({ nos, text: item.text || "", options: [...opts], answers: correct.length ? correct : ["A"], multi: nos.length > 1 });
+    });
+  } else if (g.type === "SHORT") {
+    (g.items || []).forEach((item, i) => {
+      const no = next();
+      const answers = String(item.alts || "").split(",").map(v => v.trim()).filter(Boolean);
+      if (!String(item.text || "").trim()) errors.push(`${where}, item ${i + 1}: type the question`);
+      if (!answers.length) errors.push(`${where}, item ${i + 1}: add the accepted answer(s)`);
+      out.items.push({ nos: [no], text: item.text || "", answers });
+    });
+  } else {
+    const allowed = TF[g.type] || TF.TFNG;
+    (g.items || []).forEach((item, i) => {
+      const no = next();
+      if (!String(item.text || "").trim()) errors.push(`${where}, item ${i + 1}: type the statement`);
+      if (!allowed.includes(item.answer)) errors.push(`${where}, item ${i + 1}: choose the answer`);
+      out.items.push({ nos: [no], text: item.text || "", answers: [item.answer] });
+    });
+  }
+
+  const nos = out.items.flatMap(it => it.nos);
+  out.range = nos.length > 1 ? `${nos[0]}–${nos[nos.length - 1]}` : nos.length ? String(nos[0]) : "";
+  return out;
+}
+
+/* ---------- Convert a test back into editor format (for files without editor data) ---------- */
+function fromRuntime(data) {
+  if (!data || !Array.isArray(data.parts)) throw new Error("Not a test");
+
+  const parts = data.parts.map(p => {
+    const groups = (p.groups || []).map(g => {
+      const base = { type: g.type, heading: g.heading || "", instruction: g.instruction || "", box: g.box || "", lines: [], items: [], options: [] };
+      const byNo = new Map((g.items || []).map(it => [String(it.nos[0]), it]));
+
+      if (g.type === "GAP") {
+        base.lines = (g.lines || []).map(ln => ({
+          kind: ln.kind === "h" || ln.kind === "t" ? ln.kind : "b",
+          text: String(ln.text || "").replace(/\{(\d+)\}/g, (_, no) => {
+            const it = byNo.get(no);
+            return `[${(it && it.answers ? it.answers : []).join("/")}]`;
+          })
+        }));
+      } else if (g.type === "MATCH") {
+        base.options = [...(g.options || [])];
+        base.items = (g.items || []).map(it => ({ ...blankItem("MATCH"), text: it.text || "", answer: (it.answers || [])[0] || "A" }));
+      } else if (g.type === "MCQ") {
+        base.items = (g.items || []).map(it => ({ ...blankItem("MCQ"), text: it.text || "", options: [...(it.options || [])], correct: [...(it.answers || [])] }));
+      } else if (g.type === "SHORT") {
+        base.items = (g.items || []).map(it => ({ ...blankItem("SHORT"), text: it.text || "", alts: (it.answers || []).join(", ") }));
+      } else {
+        base.items = (g.items || []).map(it => ({ ...blankItem(g.type), text: it.text || "", answer: (it.answers || [])[0] || "" }));
+      }
+      return base;
+    });
+
+    return {
+      passageTitle: p.passageTitle || "",
+      instruction: p.instruction || "",
+      paragraphs: (p.paragraphs || []).length ? [...p.paragraphs] : [""],
+      groups
+    };
+  });
+
+  return { title: data.title || "Untitled test", time: Number(data.time) || 20, labels: data.labels !== false, parts };
+}
+
+/* Reads a saved test page, a tests/*.js file, or a plain JSON test. */
+function parseTestFile(text) {
+  const m = text.match(/window\.TEST_DATA\s*=\s*([\s\S]*?);\s*<\/script>/);
+  if (m) return JSON.parse(m[1]);
+  const t = text.trim();
+  if (t.indexOf("window.TEST_DATA") === 0) {
+    return JSON.parse(t.replace(/^window\.TEST_DATA\s*=\s*/, "").replace(/;\s*$/, ""));
+  }
+  return JSON.parse(t);
+}
+
+/* ---------- Build a standalone test page ---------- */
+// Writing and speaking use their own player pages, loaded once when the editor opens.
+const TEMPLATE_FILES = { writing: "templates/writing.html", speaking: "templates/speaking.html" };
+const templateCache = {};
+function templateFor(type) {
+  if (type === "writing" || type === "speaking") return templateCache[type] || null;
+  return $("test-template").textContent;
+}
+
+function buildTestPage(source, id) {
+  const { test, errors } = compile(source);
+  const payload = { ...test, id: id || null, editor: clone(source) };
+  const json = JSON.stringify(payload)
+    .replace(/</g, "\\u003c")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+  const closeTag = "<" + "/script>";
+  const raw = templateFor(test.type);
+  if (!raw) return { html: "", test, errors: [...errors, "The page template for this test type could not load. Reload the editor and try again."] };
+  const template = raw.replace(/<\\\/script>/g, closeTag);
+  return { html: template.replace("__TEST_DATA__", () => json), test, errors };
+}
+
+function refreshStatus() {
+  const { errors, count } = compile(doc);
+  $("errors").innerHTML = errors.map(e => `<div>${esc(e)}</div>`).join("");
+  const s = $("status");
+  if (errors.length) {
+    s.className = "status bad";
+    s.textContent = `${errors.length} problem${errors.length > 1 ? "s" : ""} to fix`;
+  } else {
+    s.className = "status good";
+    const type = doc.type || "reading";
+    const tasked = type === "writing" || type === "speaking";
+    const n = tasked ? doc.parts.length : count;
+    const unit = type === "writing" ? "task" : type === "speaking" ? "part" : "question";
+    s.textContent = `${n} ${unit}${n === 1 ? "" : "s"} · ready`;
+  }
+}
+
+/* ---------- Screens ---------- */
+function render() {
+  const compiled = compile(doc);
+  $("editor").innerHTML = edDetails() +
+    doc.parts.map((p, pi) => edPassage(p, pi, compiled.test.parts[pi])).join("") +
+    `<div class="actions"><button class="btn outline" data-act="add-passage">+ Add passage</button></div>`;
+  refreshStatus();
+}
+
+function edDetails() {
+  return `<section class="card">
+    <div class="card-head"><h3>Test details</h3></div>
+    <div class="grid-2">
+      <div><label class="lbl">Test title</label><input class="field" data-k="title" value="${esc(doc.title)}"></div>
+      <div><label class="lbl">Time (minutes)</label><input class="field" type="number" min="1" data-k="time" value="${esc(doc.time)}"></div>
+    </div>
+    <div class="grid-2" style="margin-top:12px">
+      <div><label class="lbl">Test group (choose an existing one or type a new name, e.g. Academic Test 17)</label><input class="field" data-k="series" list="seriesList" value="${esc(doc.series || "")}">
+        <datalist id="seriesList">${knownSeries.map(s => `<option value="${esc(s)}">`).join("")}</datalist></div>
+      <div><label class="lbl">Activity name (e.g. Test 1 Reading Passage 1)</label><input class="field" data-k="label" value="${esc(doc.label || "")}"></div>
+    </div>
+    <label class="lbl" style="margin-top:12px">Test type</label>
+    <select class="field" data-k="type">
+      ${TEST_TYPES.map(([v, l]) => `<option value="${v}" ${(doc.type || "reading") === v ? "selected" : ""}>${l}</option>`).join("")}
+    </select>
+    <label class="check" style="margin-top:12px">
+      <input type="checkbox" data-k="labels" ${doc.labels !== false ? "checked" : ""}> Show paragraph letters (A, B, C…)
+    </label>
+  </section>`;
+}
+
+function edPassage(p, pi, compiled) {
+  const type = doc.type || "reading";
+  const partName = { reading: "Passage", listening: "Section", writing: "Task", speaking: "Part" }[type];
+  const paraHeading = type === "writing" ? "Task prompt" : type === "speaking" ? "Prompt" : "Paragraphs";
+  const hasQuestions = type === "reading" || type === "listening";
+  const audioBlock = type !== "listening" ? "" : `
+    <h4>Audio</h4>
+    ${p.audioUrl ? `<div class="row"><audio controls preload="metadata" src="${esc(p.audioUrl)}" style="flex:1"></audio>
+      <button class="btn danger sm" data-act="del-audio" data-p="${pi}">Remove audio</button></div>` : ""}
+    <input type="file" accept="audio/*" data-k="audio" data-p="${pi}">`;
+  const imageBlock = type !== "writing" ? "" : `
+    <h4>Image (Task 1 chart, graph or diagram, optional)</h4>
+    ${p.imageUrl ? `<div class="row"><img src="${esc(p.imageUrl)}" alt="" style="max-width:260px;border-radius:6px">
+      <button class="btn danger sm" data-act="del-image" data-p="${pi}">Remove image</button></div>` : ""}
+    <input type="file" accept="image/*" data-k="image" data-p="${pi}">
+    <label class="lbl">Minimum words (0 for no minimum)</label>
+    <input class="field" type="number" min="0" data-k="minwords" data-p="${pi}" value="${esc(p.minWords ?? 0)}">`;
+  const paragraphs = p.paragraphs.map((t, i) => `
+    <div class="row">
+      <span class="idx">${doc.labels !== false ? L(i) : ""}</span>
+      <textarea class="field" rows="4" data-k="para" data-p="${pi}" data-i="${i}">${esc(t)}</textarea>
+      <button class="btn danger sm" data-act="del-para" data-p="${pi}" data-i="${i}">Remove</button>
+    </div>`).join("");
+
+  const groups = p.groups.map((g, gi) =>
+    edGroup(g, pi, gi, compiled && compiled.groups[gi] ? compiled.groups[gi].range : "")).join("");
+
+  return `<section class="card">
+    <div class="card-head">
+      <h3>${partName} ${pi + 1}</h3>
+      <button class="btn danger sm" data-act="del-passage" data-p="${pi}">Remove passage</button>
+    </div>
+    <label class="lbl">Passage title</label>
+    <input class="field" data-k="ptitle" data-p="${pi}" value="${esc(p.passageTitle)}">
+    <label class="lbl">Instruction shown above the questions</label>
+    <textarea class="field" rows="2" data-k="pinstr" data-p="${pi}">${esc(p.instruction)}</textarea>
+    ${type === "writing" ? `<label class="lbl">Second instruction, shown in its own box below the first (optional)</label>
+    <textarea class="field" rows="2" data-k="pinstr2" data-p="${pi}">${esc(p.instruction2)}</textarea>` : ""}
+    ${audioBlock}
+    <h4>${paraHeading}</h4>
+    ${paragraphs}
+    <button class="btn outline sm" data-act="add-para" data-p="${pi}">+ Add paragraph</button>
+    ${hasQuestions ? `<h4>Questions</h4>
+    ${groups}
+    <button class="btn outline sm" data-act="add-group" data-p="${pi}">+ Add question group</button>` : ""}
+    ${imageBlock}
+  </section>`;
+}
+
+function edGroup(g, pi, gi, range) {
+  const a = `data-p="${pi}" data-g="${gi}"`;
+  const typeOptions = TYPES.map(([v, l]) => `<option value="${v}" ${g.type === v ? "selected" : ""}>${l}</option>`).join("");
+
+  let body;
+  if (g.type === "GAP") body = edGap(g, a);
+  else if (g.type === "MATCH") body = edMatch(g, a);
+  else if (g.type === "SHORT") body = edShort(g, a);
+  else if (g.type === "MCQ") body = edMcq(g, a);
+  else body = edTf(g, a);
+
+  return `<div class="card sub">
+    <div class="card-head">
+      <h3>Question group ${gi + 1}</h3>
+      <span class="nums">${range ? "Numbers " + range : "No numbers yet"}</span>
+      <button class="btn danger sm" data-act="del-group" ${a}>Remove group</button>
+    </div>
+    <div class="grid-2">
+      <div><label class="lbl">Question type</label><select class="field" data-k="gtype" ${a}>${typeOptions}</select></div>
+      <div><label class="lbl">Heading</label><input class="field" data-k="ghead" ${a} value="${esc(g.heading)}"></div>
+    </div>
+    <label class="lbl">Instruction</label>
+    <textarea class="field" rows="2" data-k="ginstr" ${a}>${esc(g.instruction)}</textarea>
+    ${body}
+  </div>`;
+}
+
+function edGap(g, a) {
+  const lines = g.lines.map((ln, i) => `
+    <div class="row">
+      <select data-k="lkind" ${a} data-i="${i}">
+        <option value="h" ${ln.kind === "h" ? "selected" : ""}>Sub-heading</option>
+        <option value="b" ${ln.kind === "b" ? "selected" : ""}>Bullet</option>
+        <option value="t" ${ln.kind === "t" ? "selected" : ""}>Plain line</option>
+      </select>
+      <input class="field" data-k="line" ${a} data-i="${i}" value="${esc(ln.text)}" placeholder="Hives are on flat [rooftops]">
+      <button class="btn danger sm" data-act="del-line" ${a} data-i="${i}">Remove</button>
+    </div>`).join("");
+
+  return `<label class="lbl">Box title (optional)</label>
+    <input class="field" data-k="gbox" ${a} value="${esc(g.box)}">
+    <h4>Lines</h4>
+    ${lines}
+    <button class="btn outline sm" data-act="add-line" ${a}>+ Add line</button>
+    <p class="hint">Put each answer in square brackets, e.g. <em>Hives are on flat [rooftops]</em>. For alternatives use a slash: [rooftops/rooftop].</p>`;
+}
+
+function edMatch(g, a) {
+  const options = g.options.map((o, i) => `
+    <div class="row">
+      <span class="idx">${L(i)}</span>
+      <input class="field" data-k="gopt" ${a} data-i="${i}" value="${esc(o)}">
+      <button class="btn danger sm" data-act="del-gopt" ${a} data-i="${i}">Remove</button>
+    </div>`).join("");
+
+  const items = g.items.map((it, i) => `
+    <div class="row">
+      <input class="field" data-k="itext" ${a} data-i="${i}" value="${esc(it.text)}" placeholder="Paragraph A">
+      <select data-k="ians" ${a} data-i="${i}">
+        ${g.options.map((_, x) => `<option value="${L(x)}" ${it.answer === L(x) ? "selected" : ""}>${L(x)}</option>`).join("")}
+      </select>
+      <button class="btn danger sm" data-act="del-item" ${a} data-i="${i}">Remove</button>
+    </div>`).join("");
+
+  return `<h4>Options (headings or list items)</h4>
+    ${options}
+    <button class="btn outline sm" data-act="add-gopt" ${a}>+ Add option</button>
+    <h4>Items to match</h4>
+    ${items}
+    <button class="btn outline sm" data-act="add-item" ${a}>+ Add item</button>`;
+}
+
+function edTf(g, a) {
+  const choices = TF[g.type] || TF.TFNG;
+  const items = g.items.map((it, i) => `
+    <div class="item">
+      <div class="row">
+        <input class="field" data-k="itext" ${a} data-i="${i}" value="${esc(it.text)}" placeholder="Statement">
+        <select data-k="ians" ${a} data-i="${i}">
+          ${choices.map(o => `<option value="${o}" ${it.answer === o ? "selected" : ""}>${o}</option>`).join("")}
+        </select>
+        <button class="btn danger sm" data-act="del-item" ${a} data-i="${i}">Remove</button>
+      </div>
+    </div>`).join("");
+
+  return `<h4>Statements</h4>
+    ${items}
+    <button class="btn outline sm" data-act="add-item" ${a}>+ Add statement</button>`;
+}
+
+function edMcq(g, a) {
+  const items = g.items.map((it, i) => {
+    const ia = `${a} data-i="${i}"`;
+    const correct = it.correct || [];
+    const options = (it.options || []).map((o, x) => `
+      <div class="row">
+        <span class="idx">${L(x)}</span>
+        <input class="field" data-k="opt" ${ia} data-x="${x}" value="${esc(o)}" placeholder="Option">
+        <label class="check">
+          <input type="checkbox" data-k="mchk" ${ia} data-x="${x}" value="${L(x)}" ${correct.includes(L(x)) ? "checked" : ""}> Correct
+        </label>
+        <button class="btn danger sm" data-act="del-opt" ${ia} data-x="${x}">Remove</button>
+      </div>`).join("");
+
+    return `<div class="item">
+      <div class="row">
+        <input class="field" data-k="itext" ${ia} value="${esc(it.text)}" placeholder="Question">
+        <button class="btn danger sm" data-act="del-item" ${ia}>Remove</button>
+      </div>
+      <div class="indent">
+        ${options}
+        <button class="btn outline sm" data-act="add-opt" ${ia}>+ Add option</button>
+        <p class="hint">Tick the correct answer. Ticking two creates a “choose TWO” question.</p>
+      </div>
+    </div>`;
+  }).join("");
+
+  return `<h4>Questions</h4>
+    ${items}
+    <button class="btn outline sm" data-act="add-item" ${a}>+ Add question</button>`;
+}
+
+function edShort(g, a) {
+  const items = g.items.map((it, i) => `
+    <div class="item">
+      <div class="row">
+        <input class="field" data-k="itext" ${a} data-i="${i}" value="${esc(it.text)}" placeholder="Question">
+        <button class="btn danger sm" data-act="del-item" ${a} data-i="${i}">Remove</button>
+      </div>
+      <div class="row">
+        <input class="field" data-k="ialts" ${a} data-i="${i}" value="${esc(it.alts)}" placeholder="Accepted answers, separated by commas">
+      </div>
+    </div>`).join("");
+
+  return `<h4>Questions</h4>
+    ${items}
+    <button class="btn outline sm" data-act="add-item" ${a}>+ Add question</button>`;
+}
+
+/* ---------- Changes ---------- */
+function normalizeItems(g) {
+  g.items = (g.items || []).map(it => {
+    const base = {
+      text: it.text || "",
+      answer: it.answer || "",
+      options: it.options || [],
+      correct: it.correct || [],
+      alts: it.alts || ""
+    };
+    if (g.type === "TFNG") base.answer = TF.TFNG.includes(base.answer) ? base.answer : "TRUE";
+    if (g.type === "YNNG") base.answer = TF.YNNG.includes(base.answer) ? base.answer : "YES";
+    if (g.type === "MATCH") base.answer = /^[A-Z]$/.test(base.answer) ? base.answer : "A";
+    if (g.type === "MCQ" && base.options.length < 2) base.options = ["", "", ""];
+    return base;
+  });
+}
+
+function removeMatchOption(group, index) {
+  group.options.splice(index, 1);
+  group.items.forEach(it => {
+    if (it.answer === L(index)) it.answer = "";
+    else if (it.answer && letterIndex(it.answer) > index) it.answer = L(letterIndex(it.answer) - 1);
+  });
+}
+
+function removeMcqOption(item, index) {
+  item.options.splice(index, 1);
+  item.correct = (item.correct || [])
+    .filter(letter => letter !== L(index))
+    .map(letter => letterIndex(letter) > index ? L(letterIndex(letter) - 1) : letter);
+}
+
+function handleField(t) {
+  const key = t.dataset.k;
+  const p = Number(t.dataset.p ?? -1);
+  const g = Number(t.dataset.g ?? -1);
+  const i = Number(t.dataset.i ?? -1);
+  const x = Number(t.dataset.x ?? -1);
+  const group = () => doc.parts[p].groups[g];
+  const item = () => group().items[i];
+  let rerender = false;
+  if (key === "audio") { if (t.files && t.files.length) uploadAudio(t, p); return; }
+  if (key === "image") { if (t.files && t.files.length) uploadImage(t, p); return; }
+
+  switch (key) {
+    case "title": doc.title = t.value; break;
+    case "time": doc.time = Math.max(1, Number(t.value) || 20); break;
+    case "labels": doc.labels = t.checked; rerender = true; break;
+    case "type": doc.type = t.value; rerender = true; break;
+    case "series": doc.series = t.value; break;
+    case "label": doc.label = t.value; break;
+    case "minwords": doc.parts[p].minWords = Math.max(0, Number(t.value) || 0); break;
+    case "ptitle": doc.parts[p].passageTitle = t.value; break;
+    case "pinstr": doc.parts[p].instruction = t.value; break;
+    case "pinstr2": doc.parts[p].instruction2 = t.value; break;
+    case "para": doc.parts[p].paragraphs[i] = t.value; break;
+    case "gtype": group().type = t.value; normalizeItems(group()); rerender = true; break;
+    case "ghead": group().heading = t.value; break;
+    case "ginstr": group().instruction = t.value; break;
+    case "gbox": group().box = t.value; break;
+    case "lkind": group().lines[i].kind = t.value; break;
+    case "line": group().lines[i].text = t.value; break;
+    case "gopt": group().options[i] = t.value; break;
+    case "itext": item().text = t.value; break;
+    case "ians": item().answer = t.value; break;
+    case "ialts": item().alts = t.value; break;
+    case "opt": item().options[x] = t.value; break;
+    case "mchk": {
+      const it = item();
+      const set = new Set(it.correct || []);
+      if (t.checked) set.add(t.value);
+      else set.delete(t.value);
+      it.correct = [...set].sort();
+      break;
+    }
+    default: return;
+  }
+
+  saveDraft();
+  if (rerender) render();
+  else refreshStatus();
+}
+
+const SUPABASE_URL = 'https://yfsxbiqszvrqhsdcuwyr.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_W1BJsbUOZdR0dm5Ai_yHJg_J64HYtPH';
+
+// Existing test groups, offered as choices in Test details. Filled in when the editor opens.
+let knownSeries = [];
+async function loadKnownSeries() {
+  if (!window.supabase) return;
+  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  const [tests, groups] = await Promise.all([
+    client.from("tests").select("series"),
+    client.from("test_groups").select("name"),
+  ]);
+  if (tests.error || !tests.data) return;
+  const names = [...tests.data.map(r => (r.series || "").trim()), ...((groups.data) || []).map(r => r.name)];
+  knownSeries = [...new Set(names.filter(Boolean))].sort();
+  render();
+}
+
+// Adds the current test to the "tests" table so it appears on the student area.
+// Only admins can insert (enforced by the database policies, not by this page).
+// Uploads a listening audio file to the public "test-audio" bucket and stores its URL on the section.
+async function uploadAudio(input, p) {
+  const file = input.files[0];
+  input.value = "";
+  if (!file) return;
+  if (!window.supabase) { alert("The Supabase library could not load. Check your connection and reload the page."); return; }
+  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  const { data: session } = await client.auth.getSession();
+  if (!session.session) { alert("Sign in as an admin first."); window.location.href = "login.html"; return; }
+  const ext = (file.name.split(".").pop() || "mp3").toLowerCase();
+  const path = `${slugify(doc.title)}/${Date.now().toString(36)}.${ext}`;
+  $("status").textContent = "Uploading audio…";
+  const { error } = await client.storage.from("test-audio").upload(path, file, { contentType: file.type || "audio/mpeg" });
+  if (error) { alert("Audio upload failed: " + error.message); refreshStatus(); return; }
+  doc.parts[p].audioUrl = client.storage.from("test-audio").getPublicUrl(path).data.publicUrl;
+  saveDraft();
+  render();
+}
+
+// Uploads a writing Task 1 image to the public "test-images" bucket and stores its URL on the task.
+async function uploadImage(input, p) {
+  const file = input.files[0];
+  input.value = "";
+  if (!file) return;
+  if (!window.supabase) { alert("The Supabase library could not load. Check your connection and reload the page."); return; }
+  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  const { data: session } = await client.auth.getSession();
+  if (!session.session) { alert("Sign in as an admin first."); window.location.href = "login.html"; return; }
+  const ext = (file.name.split(".").pop() || "png").toLowerCase();
+  const path = `${slugify(doc.title)}/${Date.now().toString(36)}.${ext}`;
+  $("status").textContent = "Uploading image…";
+  const { error } = await client.storage.from("test-images").upload(path, file, { contentType: file.type || "image/png" });
+  if (error) { alert("Image upload failed: " + error.message); refreshStatus(); return; }
+  doc.parts[p].imageUrl = client.storage.from("test-images").getPublicUrl(path).data.publicUrl;
+  saveDraft();
+  render();
+}
+
+async function publishTest() {
+  if (!window.supabase) { alert("The Supabase library could not load. Check your connection and reload the page."); return; }
+  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  const { data: session } = await client.auth.getSession();
+  if (!session.session) { alert("Sign in as an admin first."); window.location.href = "login.html"; return; }
+  const series = (doc.series || "").trim();
+  if (!series) { alert("Enter a series name in Test details first (for example Academic Test 17)."); return; }
+  const id = slugify(doc.title) + "-" + Date.now().toString(36);
+  // A writing set can hold Task 1 and Task 2; each one is published as its own test.
+  let source = doc;
+  let label = (doc.label || "").trim() || doc.title;
+  if ((doc.type || "reading") === "writing" && doc.parts.length > 1) {
+    const choice = Number(prompt(`Which task do you want to publish? Enter ${doc.parts.map((_, i) => i + 1).join(" or ")}.`));
+    if (!doc.parts[choice - 1]) return; // cancelled or not a task number
+    source = { ...doc, title: `${doc.title} – Task ${choice}`, parts: [doc.parts[choice - 1]] };
+    label = `${label} – Task ${choice}`;
+  }
+  const { html, test, errors } = buildTestPage(source, id);
+  if (errors.length) { refreshStatus(); alert("Fix the problems listed on the page before publishing."); return; }
+  const { error } = await client.from("tests").insert({ id, title: test.title, minutes: test.time, kind: test.type, series, label, html });
+  if (error) { alert("Could not publish: " + error.message); return; }
+  alert(`Published "${test.title}". It now appears under Tests.`);
+}
+
+function handleAction(act, el) {
+  if (act === "publish") { publishTest(); return; }
+  const p = Number(el.dataset.p ?? -1);
+  const g = Number(el.dataset.g ?? -1);
+  const i = Number(el.dataset.i ?? -1);
+  const x = Number(el.dataset.x ?? -1);
+  const part = () => doc.parts[p];
+  const group = () => doc.parts[p].groups[g];
+  const item = () => group().items[i];
+
+  switch (act) {
+    case "new":
+      if (!confirm("Start a blank test? The current test will be replaced.")) return;
+      doc = blankDoc();
+      break;
+    case "example":
+      if (!confirm("Load the example? The current test will be replaced.")) return;
+      doc = clone(EXAMPLE);
+      break;
+    case "preview": {
+      const { html, errors } = buildTestPage(doc);
+      if (errors.length) { refreshStatus(); alert("Fix the problems listed on the page before previewing."); return; }
+      const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      return;
+    }
+    case "save": {
+      const { html, test, errors } = buildTestPage(doc);
+      if (errors.length) { refreshStatus(); alert("Fix the problems listed on the page before saving."); return; }
+      const name = slugify(test.title) + ".html";
+      const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      alert(`Saved ${name}.\n\nDouble-click it to open the test. It does not need this editor or any other file.`);
+      return;
+    }
+    case "del-audio": delete part().audioUrl; break;
+    case "del-image": delete part().imageUrl; break;
+    case "add-passage": doc.parts.push(blankPassage()); break;
+    case "del-passage":
+      if (!confirm("Remove this passage and all its questions?")) return;
+      doc.parts.splice(p, 1);
+      break;
+    case "add-para": part().paragraphs.push(""); break;
+    case "del-para": part().paragraphs.splice(i, 1); break;
+    case "add-group": part().groups.push(blankGroup("GAP")); break;
+    case "del-group":
+      if (!confirm("Remove this question group?")) return;
+      part().groups.splice(g, 1);
+      break;
+    case "add-line": group().lines.push({ kind: "b", text: "" }); break;
+    case "del-line": group().lines.splice(i, 1); break;
+    case "add-gopt": group().options.push(""); break;
+    case "del-gopt": removeMatchOption(group(), i); break;
+    case "add-item": group().items.push(blankItem(group().type)); break;
+    case "del-item": group().items.splice(i, 1); break;
+    case "add-opt": item().options.push(""); break;
+    case "del-opt": removeMcqOption(item(), x); break;
+    default: return;
+  }
+
+  saveDraft();
+  render();
+}
+
+async function openFile(input) {
+  const file = input.files[0];
+  input.value = "";
+  if (!file) return;
+
+  let imported;
+  try {
+    const data = parseTestFile(await file.text());
+    imported = data.editor && Array.isArray(data.editor.parts) ? data.editor : fromRuntime(data);
+  } catch {
+    alert("This is not a test file the editor can open.");
+    return;
+  }
+
+  if (!confirm("Replace the current test with this file?")) return;
+  doc = imported;
+  saveDraft();
+  render();
+}
+
+/* ---------- Wiring ---------- */
+document.addEventListener("click", e => {
+  const btn = e.target.closest("[data-act]");
+  if (btn) handleAction(btn.dataset.act, btn);
+});
+
+function onField(e) {
+  const t = e.target;
+  if (t.id === "openFile") return openFile(t);
+  if (t.dataset && t.dataset.k) handleField(t);
+}
+document.addEventListener("input", onField);
+document.addEventListener("change", onField);
+
+Object.entries(TEMPLATE_FILES).forEach(([type, file]) => {
+  fetch(file)
+    .then(r => (r.ok ? r.text() : Promise.reject(r.status)))
+    .then(text => { templateCache[type] = text; })
+    .catch(err => console.error("Could not load", file, err));
+});
+
+render();
+loadKnownSeries();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</body>
+</html>

@@ -14,7 +14,7 @@
     .card{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:30px;box-shadow:0 18px 50px #14263d0c}.card h2{margin:0 0 8px;color:var(--navy);font-size:1.55rem}.sub{margin:0 0 24px;color:var(--muted);line-height:1.5;font-size:.94rem}
     label{display:block;font-weight:700;font-size:.9rem;margin:16px 0 7px}input{width:100%;padding:13px 14px;border:1px solid #cbd2da;border-radius:9px;background:#fff;color:var(--ink);font:inherit}input:focus{outline:3px solid #d8b15f55;border-color:#a78031}
     button{width:100%;border:0;border-radius:9px;padding:13px 16px;margin-top:20px;background:var(--navy);color:#fff;font:inherit;font-weight:750;cursor:pointer}button:hover{background:var(--navy2)}button:disabled{opacity:.6;cursor:wait}.linkbtn{display:block;width:auto;margin:16px auto 0;padding:4px;background:none;color:var(--navy);font-size:.9rem;text-decoration:underline;font-weight:650}.linkbtn:hover{background:none;color:#8a6a2b}
-    #message{display:none;margin-top:16px;padding:12px;border-radius:8px;font-size:.9rem;line-height:1.5;overflow-wrap:anywhere}#message.error{display:block;background:#fff0f0;color:var(--error)}#message.success{display:block;background:#edf8f0;color:var(--success)}.hint{font-size:.8rem;line-height:1.5;color:var(--muted);margin-top:20px}.footer{text-align:center;padding:20px 24px 28px;color:var(--muted);font-size:.8rem}
+    #message{display:none;margin-top:16px;padding:12px;border-radius:8px;font-size:.9rem;line-height:1.5;overflow-wrap:anywhere}#message.error{display:block;background:#fff0f0;color:var(--error)}#message.success{display:block;background:#edf8f0;color:var(--success)}.hint{font-size:.8rem;line-height:1.5;color:var(--muted);margin-top:20px}.register{margin-top:24px;padding-top:20px;border-top:1px solid var(--line);text-align:center}.register p{margin:0 0 10px;color:var(--muted);font-size:.9rem}.register-btn{display:inline-block;background:var(--gold);color:var(--navy);text-decoration:none;font-weight:700;padding:11px 18px;border-radius:9px}.register-btn:hover{background:#c9a24e}.footer{text-align:center;padding:20px 24px 28px;color:var(--muted);font-size:.8rem}
     @media(max-width:760px){main{grid-template-columns:1fr;gap:28px;padding-top:36px}.intro h1{font-size:2.6rem}.intro p{font-size:1rem}.card{padding:24px}}
   </style>
 </head>
@@ -31,7 +31,10 @@
       </form>
       <button class="linkbtn" id="reset-button" type="button">Forgot your password?</button>
       <div id="message" role="status" aria-live="polite"></div>
-      <p class="hint">Public registration is now enabled.</p>
+      <div class="register">
+        <p>New student?</p>
+        <a class="register-btn" href="register.html">Create an account</a>
+      </div>
     </section>
   </main>
   <footer class="footer">IELTS Academic Reading · Practice assessment portal</footer>
@@ -56,9 +59,14 @@
       submitButton.disabled = true;
     } else {
       const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+      // Admins go to the admin panel; students go to the student area.
+      async function goNext(session) {
+        const { data: admin } = await client.from('admins').select('user_id').eq('user_id', session.user.id).maybeSingle();
+        window.location.replace(admin ? 'admin.html' : 'tests.html');
+      }
       client.auth.getSession().then(({ data, error }) => {
         if (error) console.error('Session check failed:', error);
-        if (data?.session) window.location.replace('tests.html');
+        if (data?.session) goNext(data.session);
       }).catch(error => console.error('Supabase session check failed:', error));
 
       form.addEventListener('submit', async (event) => {
@@ -70,8 +78,8 @@
           const { data, error } = await client.auth.signInWithPassword({ email, password });
           if (error) throw error;
           if (!data.session) throw new Error('Sign-in did not create a session.');
-          showMessage('Signed in successfully. Opening the student area…', 'success');
-          window.location.replace('tests.html');
+          showMessage('Signed in successfully. Opening Tests…', 'success');
+          await goNext(data.session);
         } catch (error) {
           console.error('Sign-in error:', error);
           showMessage(friendlyError(error), 'error');

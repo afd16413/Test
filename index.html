@@ -3,101 +3,99 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>IELTS Academic Reading</title>
+<title>IELTS Academic Practice</title>
 <style>
-.contact { max-width: 960px; margin: 0 auto 40px; padding: 0 24px; }
-.contact .panel { margin-top: 0; }
-.contact label { display: block; font-weight: 700; font-size: .9rem; margin: 14px 0 6px; }
-.contact input, .contact textarea { width: 100%; padding: 11px 13px; border: 1px solid #cbd2da; border-radius: 9px; font: inherit; }
-.contact button { margin-top: 16px; padding: 12px 18px; border: 0; border-radius: 9px; background: var(--navy); color: #fff; font-weight: 700; cursor: pointer; }
-.contact button:disabled { opacity: .6; }
-#contact-msg { margin-top: 12px; font-size: .9rem; }
 :root{--navy:#13243a;--gold:#d6ad58;--paper:#f5f3ee;--ink:#202a36;--muted:#667384;--white:#fff}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--ink);background:var(--paper);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;min-height:100vh;color:var(--ink);background:var(--paper);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
 header{background:var(--navy);color:var(--white);border-bottom:4px solid var(--gold)}
 .topbar{max-width:1080px;margin:auto;padding:22px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.brand{font-size:1.05rem;font-weight:750;letter-spacing:.02em}.brand span{color:var(--gold)}
+.brand{font-size:1.05rem;font-weight:750;letter-spacing:.02em;color:inherit;text-decoration:none}.brand span{color:var(--gold)}
 .navlinks{display:flex;gap:10px;flex-wrap:wrap}
 .navlinks a{color:var(--navy);background:var(--gold);text-decoration:none;font-weight:700;font-size:.9rem;padding:9px 16px;border-radius:8px}
 .navlinks a.alt{background:transparent;color:var(--white);border:1px solid #ffffff66}
-main{max-width:960px;margin:56px auto;padding:0 24px}.eyebrow{color:#896a2c;font-weight:750;text-transform:uppercase;letter-spacing:.15em;font-size:.76rem}
-h1{color:var(--navy);font-size:clamp(2.2rem,6vw,4rem);line-height:1.05;margin:14px 0 18px}.intro{color:var(--muted);font-size:1.1rem;line-height:1.7;max-width:660px}
-.panel{margin-top:34px;background:var(--white);border:1px solid #e2ded4;border-radius:16px;padding:24px;box-shadow:0 12px 35px #13243a0b}
-.panel h2{margin:0 0 8px;color:var(--navy);font-size:1.2rem}.panel p{margin:0;color:var(--muted);line-height:1.6}
-.test-link{display:inline-block;margin-top:18px;background:var(--navy);color:var(--white);text-decoration:none;padding:12px 18px;border-radius:9px;font-weight:700}
-.test-link:hover{background:#203b58}
-footer{max-width:960px;margin:48px auto 0;padding:22px 24px 32px;color:var(--muted);font-size:.82rem}
+.navlinks button{color:var(--navy);background:var(--gold);border:0;font:inherit;font-weight:700;font-size:.9rem;padding:9px 16px;border-radius:8px;cursor:pointer}
+main{max-width:960px;width:100%;margin:56px auto;padding:0 24px;flex:1}
+.eyebrow{color:#896a2c;font-weight:750;text-transform:uppercase;letter-spacing:.15em;font-size:.76rem}
+h1{color:var(--navy);font-size:clamp(2.2rem,6vw,4rem);line-height:1.05;margin:14px 0 18px}
+.intro{color:var(--muted);font-size:1.1rem;line-height:1.7;max-width:660px}
+.cta{display:inline-block;margin-top:24px;background:var(--navy);color:var(--white);text-decoration:none;padding:13px 20px;border-radius:9px;font-weight:700}
+.cta:hover{background:#203b58}
+.skills{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-top:40px}
+.skill{background:var(--white);border:1px solid #e2ded4;border-radius:16px;padding:22px;box-shadow:0 12px 35px #13243a0b}
+.skill h2{margin:0 0 8px;color:var(--navy);font-size:1.2rem}
+.skill p{margin:0;color:var(--muted);line-height:1.6;font-size:.95rem}
+footer{max-width:960px;width:100%;margin:0 auto;padding:22px 24px 32px;color:var(--muted);font-size:.82rem}
 @media(max-width:600px){main{margin-top:38px}}
 </style>
 </head>
 <body>
 <header>
   <div class="topbar">
-    <div class="brand">IELTS <span>ACADEMIC</span> READING</div>
+    <a class="brand" href="index.html">IELTS <span>ACADEMIC</span> PRACTICE</a>
     <nav class="navlinks">
-      <a href="login.html">Student login</a>
+      <a id="navLogin" href="login.html">Login</a>
+      <a id="navRegister" href="register.html">Register</a>
+      <a id="navArea" href="tests.html" hidden>Tests</a>
+      <a id="navAdmin" href="admin.html" hidden>Admin panel</a>
+      <a href="contact.html">Contact</a>
       <a class="alt" href="results.html">My results</a>
+      <button id="navSignout" type="button" hidden>Sign out</button>
     </nav>
   </div>
 </header>
 <main>
-<div class="eyebrow">Reading assessment platform</div>
-<h1>Read carefully.<br>Think critically.</h1>
-<p class="intro">A dedicated space for IELTS Academic Reading practice. Sign in to save your scores and review them later.</p>
-<section class="panel" aria-labelledby="test-title">
-  <h2 id="test-title">Reading tests</h2>
-  <p>Academic Reading 17, Test 1: The Dead Sea Scrolls. 60 minutes, 13 questions. Signing in is optional, but only signed-in students have their scores saved.</p>
-  <a class="test-link" href="academic-reading-17-test-1.html">Open Academic Reading 17 Test 1</a>
-</section>
+  <div class="eyebrow">Four skills, one platform</div>
+  <h1>Practise Listening, Reading, Writing and Speaking.</h1>
+  <p class="intro">IELTS Academic practice tests for all four skills. Sign in to take tests, save your scores and review your results.</p>
+  <a class="cta" href="tests.html">Practice</a>
+
+  <section class="skills" aria-label="The four skills">
+    <div class="skill">
+      <h2>Listening</h2>
+      <p>Audio recordings followed by questions, marked automatically.</p>
+    </div>
+    <div class="skill">
+      <h2>Reading</h2>
+      <p>Academic passages with question types such as True / False / Not Given and gap filling.</p>
+    </div>
+    <div class="skill">
+      <h2>Writing</h2>
+      <p>Task 1 and Task 2 with a word counter, reviewed by your teacher.</p>
+    </div>
+    <div class="skill">
+      <h2>Speaking</h2>
+      <p>Record your answers in the browser, then your teacher reviews them.</p>
+    </div>
+  </section>
 </main>
-  <section class="contact" id="contact">
-  <div class="panel">
-    <h2>Ready to improve your IELTS score?</h2>
-    <p>Create a free account to take practice tests, or send us a message about tutoring.</p>
-    <p style="margin-top:16px"><a class="login-btn" href="register.html">Register</a></p>
-  </div>
-  <div class="panel" style="margin-top:20px">
-    <h2>Contact us about tutoring</h2>
-    <p>Tell us your target band score and when you plan to take the test.</p>
-    <form id="contact-form">
-      <label for="c-name">Name</label>
-      <input id="c-name" required maxlength="100">
-      <label for="c-email">Email</label>
-      <input id="c-email" type="email" required maxlength="254">
-      <label for="c-message">Message</label>
-      <textarea id="c-message" rows="4" required maxlength="2000"></textarea>
-      <button id="contact-button" type="submit">Send message</button>
-    </form>
-    <div id="contact-msg" role="status" aria-live="polite"></div>
-  </div>
-</section>
-<footer>IELTS Academic Reading · Practice platform</footer>
+<footer>IELTS Academic Practice · Practice platform</footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  const sb = window.supabase.createClient(
-    'https://yfsxbiqszvrqhsdcuwyr.supabase.co',
-    'sb_publishable_W1BJsbUOZdR0dm5Ai_yHJg_J64HYtPH'
-  );
-  const msg = document.getElementById('contact-msg');
-  document.getElementById('contact-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('contact-button');
-    btn.disabled = true;
-    const { error } = await sb.from('enquiries').insert({
-      name: document.getElementById('c-name').value.trim(),
-      email: document.getElementById('c-email').value.trim(),
-      message: document.getElementById('c-message').value.trim()
+  // If the student is signed in, show the student area link instead of the sign-in links.
+  // Admins also get the admin panel link.
+  if (window.supabase) {
+    const client = window.supabase.createClient(
+      'https://yfsxbiqszvrqhsdcuwyr.supabase.co',
+      'sb_publishable_W1BJsbUOZdR0dm5Ai_yHJg_J64HYtPH'
+    );
+    client.auth.getSession().then(({ data }) => {
+      if (!data.session) return;
+      document.getElementById('navLogin').hidden = true;
+      document.getElementById('navRegister').hidden = true;
+      document.getElementById('navArea').hidden = false;
+      document.getElementById('navSignout').hidden = false;
+      client.from('admins').select('user_id').eq('user_id', data.session.user.id).maybeSingle()
+        .then(({ data: admin }) => { if (admin) document.getElementById('navAdmin').hidden = false; });
+    }).catch(() => {});
+
+    // Signing out here keeps the visitor on the home page, now showing the signed-out links.
+    document.getElementById('navSignout').addEventListener('click', async () => {
+      await client.auth.signOut();
+      window.location.reload();
     });
-    btn.disabled = false;
-    if (error) {
-      msg.style.color = '#a52b35';
-      msg.textContent = 'Sorry, your message could not be sent. Please try again.';
-    } else {
-      e.target.reset();
-      msg.style.color = '#246b4b';
-      msg.textContent = 'Thank you. We will reply to you soon.';
-    }
-  });
+  }
 </script>
 </body>
 </html>

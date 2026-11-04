@@ -3,15 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Student Area | IELTS Academic Reading</title>
+<title>Tests | IELTS Academic Practice</title>
 <style>
 :root{--navy:#14263d;--gold:#d8b15f;--paper:#f4f2ed;--muted:#657385}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;background:var(--paper);color:#202b38;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
 header{background:var(--navy);color:#fff;border-bottom:4px solid var(--gold)}
 .bar,main{max-width:900px;margin:auto;padding:22px 24px}
 .bar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
-.brand{font-weight:800;letter-spacing:.04em}.brand span{color:var(--gold)}
+.brand{font-weight:800;letter-spacing:.04em;color:inherit;text-decoration:none}.brand span{color:var(--gold)}
 .bar nav{display:flex;gap:10px;align-items:center}
 .bar a,.bar button{border:0;border-radius:8px;background:#fff;color:var(--navy);padding:9px 14px;font:inherit;font-weight:700;text-decoration:none;cursor:pointer}
 .bar a.gold{background:var(--gold)}
@@ -23,47 +24,105 @@ p{line-height:1.6;color:var(--muted)}
 .test{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;border:1px solid #e2ded5;border-radius:12px;padding:18px;margin-top:14px}
 .test h3{margin:0 0 4px;color:var(--navy)}
 .test small{color:var(--muted)}
-.test a{background:var(--navy);color:#fff;text-decoration:none;font-weight:700;padding:10px 16px;border-radius:8px}
+.test .actions{display:flex;gap:8px}
+.test a,.test button{background:var(--navy);color:#fff;text-decoration:none;font-weight:700;padding:10px 16px;border-radius:8px;border:0;font:inherit;cursor:pointer}
+.test button.danger{background:#a52b35}
 </style>
 </head>
 <body>
 <header>
   <div class="bar">
-    <div class="brand">IELTS <span>ACADEMIC</span> READING</div>
+    <a class="brand" href="index.html">IELTS <span>ACADEMIC</span> PRACTICE</a>
     <nav>
       <a href="results.html">My results</a>
+      <a id="navAdmin" href="admin.html" hidden>Admin panel</a>
       <button id="signout" type="button">Sign out</button>
     </nav>
   </div>
 </header>
 <main>
-  <h1>Student area</h1>
+  <h1>Tests</h1>
   <p id="status">Checking your session…</p>
+
   <section class="card">
-    <h2>Reading tests</h2>
-    <div class="test">
-      <div>
-        <h3>Academic Reading 17, Test 1: The Dead Sea Scrolls</h3>
-        <small>60 minutes · 13 questions</small>
-      </div>
-      <a href="academic-reading-17-test-1.html">Start test</a>
-    </div>
+    <h2>Tests</h2>
+    <div id="testList"></div>
   </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = 'https://yfsxbiqszvrqhsdcuwyr.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_W1BJsbUOZdR0dm5Ai_yHJg_J64HYtPH';
+const $ = id => document.getElementById(id);
+const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 if (!window.supabase) {
-  document.getElementById('status').textContent = 'Could not load the Supabase client library. Check your connection and refresh.';
+  $('status').textContent = 'Could not load the Supabase client library. Check your connection and refresh.';
 } else {
   const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-  client.auth.getSession().then(({ data, error }) => {
+
+  async function loadTests(isAdmin) {
+    const { data, error } = await client.from('tests').select('id,title,minutes,kind').order('created_at', { ascending: true });
+    const list = $('testList');
+    if (error) { list.innerHTML = `<p>Could not load the other tests: ${esc(error.message)}</p>`; return; }
+    if (!data.length) { list.innerHTML = ''; return; }
+    list.innerHTML = data.map(t => `
+      <div class="test">
+        <div>
+          <h3>${esc(t.title)}</h3>
+          <small>${esc(t.minutes)} minutes · ${esc((t.kind || 'reading').replace(/^./, c => c.toUpperCase()))}</small>
+        </div>
+        <div class="actions">
+          <button type="button" data-open="${esc(t.id)}">Start test</button>
+          ${isAdmin ? `<button type="button" class="danger" data-delete="${esc(t.id)}">Delete</button>` : ''}
+        </div>
+      </div>`).join('');
+  }
+
+  async function openTest(id) {
+    // Open the tab first so the browser does not block it, then load the test into it.
+    const win = window.open('', '_blank');
+    const { data, error } = await client.from('tests').select('html').eq('id', id).single();
+    if (error || !data) {
+      if (win) win.close();
+      alert('Could not open this test. Please try again.');
+      return;
+    }
+    const url = URL.createObjectURL(new Blob([data.html], { type: 'text/html' }));
+    if (win) win.location.href = url; else window.location.href = url;
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
+  async function deleteTest(id, isAdmin) {
+    if (!confirm('Delete this test? Students will no longer see it.')) return;
+    const { error } = await client.from('tests').delete().eq('id', id);
+    if (error) { alert('Could not delete the test: ' + error.message); return; }
+    loadTests(isAdmin);
+  }
+
+  async function init() {
+    const { data, error } = await client.auth.getSession();
     if (error || !data.session) { window.location.replace('login.html'); return; }
-    document.getElementById('status').textContent = 'Signed in as ' + data.session.user.email + '.';
-  }).catch(() => window.location.replace('login.html'));
-  document.getElementById('signout').addEventListener('click', async () => {
+    const user = data.session.user;
+    $('status').textContent = 'Signed in as ' + user.email + '.';
+
+    // Admins are the users listed in the "admins" table. The database policies enforce this too.
+    const { data: admin } = await client.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
+    const isAdmin = !!admin;
+    $('navAdmin').hidden = !isAdmin;
+    await loadTests(isAdmin);
+
+    $('testList').addEventListener('click', e => {
+      const open = e.target.closest('[data-open]');
+      const del = e.target.closest('[data-delete]');
+      if (open) openTest(open.dataset.open);
+      if (del) deleteTest(del.dataset.delete, isAdmin);
+    });
+  }
+
+  init().catch(() => window.location.replace('login.html'));
+
+  $('signout').addEventListener('click', async () => {
     await client.auth.signOut();
     window.location.replace('login.html');
   });
