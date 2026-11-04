@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Register | IELTS Academic Reading</title>
+  <style>
+    :root{--navy:#14263d;--gold:#d8b15f;--paper:#f4f2ed;--ink:#202b38;--muted:#657385;--line:#e2ded5;--error:#a52b35;--success:#246b4b}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,system-ui,sans-serif}
+    header{background:var(--navy);color:#fff;border-bottom:4px solid var(--gold);padding:21px 24px;font-weight:800}
+    header span{color:var(--gold)}
+    main{max-width:460px;margin:48px auto;padding:0 24px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:30px}
+    h1{color:var(--navy);margin:0 0 8px;font-size:1.6rem}
+    p.sub{color:var(--muted);margin:0 0 20px;line-height:1.5}
+    label{display:block;font-weight:700;font-size:.9rem;margin:16px 0 7px}
+    input{width:100%;padding:12px 14px;border:1px solid #cbd2da;border-radius:9px;font:inherit}
+    button{width:100%;margin-top:20px;padding:13px;border:0;border-radius:9px;background:var(--navy);color:#fff;font:inherit;font-weight:750;cursor:pointer}
+    button:disabled{opacity:.6}
+    #message{display:none;margin-top:16px;padding:12px;border-radius:8px;font-size:.9rem;line-height:1.5}
+    #message.error{display:block;background:#fff0f0;color:var(--error)}
+    #message.success{display:block;background:#edf8f0;color:var(--success)}
+    a{color:var(--navy)}
+  </style>
+</head>
+<body>
+  <header>IELTS <span>ACADEMIC</span> READING</header>
+  <main>
+    <section class="card">
+      <h1>Create your account</h1>
+      <p class="sub">Register to take practice tests and save your scores.</p>
+      <form id="register-form">
+        <label for="name">Full name</label>
+        <input id="name" name="name" type="text" autocomplete="name" required>
+        <label for="email">Email address</label>
+        <input id="email" name="email" type="email" autocomplete="email" required>
+        <label for="password">Password (at least 8 characters)</label>
+        <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+        <button id="submit-button" type="submit">Register</button>
+      </form>
+      <div id="message" role="status" aria-live="polite"></div>
+      <p class="sub" style="margin-top:20px">Already registered? <a href="login.html">Sign in</a></p>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const sb = window.supabase.createClient(
+      'https://yfsxbiqszvrqhsdcuwyr.supabase.co',
+      'sb_publishable_W1BJsbUOZdR0dm5Ai_yHJg_J64HYtPH'
+    );
+    const message = document.getElementById('message');
+    const button = document.getElementById('submit-button');
+
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      message.className = ''; message.textContent = '';
+      button.disabled = true;
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      try {
+        const { data, error } = await sb.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: name },
+            emailRedirectTo: new URL('login.html', window.location.href).href
+          }
+        });
+        if (error) throw error;
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          throw new Error('An account with this email already exists. Try signing in.');
+        }
+        e.target.reset();
+        message.className = 'success';
+        message.textContent = 'Account created. Check your email to confirm your address, then sign in.';
+      } catch (err) {
+        message.className = 'error';
+        message.textContent = err.message || 'Could not create your account.';
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
