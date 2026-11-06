@@ -6,20 +6,23 @@
   <meta name="color-scheme" content="light">
   <title>Student Login | IELTS Academic Reading</title>
   <style>
-    :root{--navy:#14263d;--navy2:#203b58;--gold:#d8b15f;--paper:#f4f2ed;--ink:#202b38;--muted:#657385;--line:#e2ded5;--white:#fff;--error:#a52b35;--success:#246b4b}
+    :root{--primary:#1d4ed8;--primary-2:#1e40af;--accent:#f97316;--paper:#f8fafc;--ink:#111827;--muted:#374151;--line:#dde3ea;--white:#fff;--error:#b42318;--success:#17703a}
     *{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--paper);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
-    header{background:var(--navy);color:#fff;border-bottom:4px solid var(--gold)}.bar{max-width:1100px;width:100%;margin:auto;padding:21px 24px}.brand{font-weight:800;letter-spacing:.045em}.brand span{color:var(--gold)}
+    header{background:var(--primary);color:#fff;border-bottom:4px solid var(--accent)}.bar{max-width:1100px;width:100%;margin:auto;padding:21px 24px}.brand{font-weight:800;letter-spacing:.045em}.brand span{color:var(--accent)}
     main{width:100%;max-width:1100px;margin:auto;padding:48px 24px;display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,430px);gap:56px;align-items:center;flex:1}
-    .intro .eyebrow{color:#8a6a2b;font-size:.76rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase}.intro h1{font-size:clamp(2.3rem,5vw,3.8rem);line-height:1.05;color:var(--navy);margin:15px 0}.intro p{font-size:1.08rem;line-height:1.75;color:var(--muted);max-width:550px}
-    .card{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:30px;box-shadow:0 18px 50px #14263d0c}.card h2{margin:0 0 8px;color:var(--navy);font-size:1.55rem}.sub{margin:0 0 24px;color:var(--muted);line-height:1.5;font-size:.94rem}
-    label{display:block;font-weight:700;font-size:.9rem;margin:16px 0 7px}input{width:100%;padding:13px 14px;border:1px solid #cbd2da;border-radius:9px;background:#fff;color:var(--ink);font:inherit}input:focus{outline:3px solid #d8b15f55;border-color:#a78031}
-    button{width:100%;border:0;border-radius:9px;padding:13px 16px;margin-top:20px;background:var(--navy);color:#fff;font:inherit;font-weight:750;cursor:pointer}button:hover{background:var(--navy2)}button:disabled{opacity:.6;cursor:wait}.linkbtn{display:block;width:auto;margin:16px auto 0;padding:4px;background:none;color:var(--navy);font-size:.9rem;text-decoration:underline;font-weight:650}.linkbtn:hover{background:none;color:#8a6a2b}
-    #message{display:none;margin-top:16px;padding:12px;border-radius:8px;font-size:.9rem;line-height:1.5;overflow-wrap:anywhere}#message.error{display:block;background:#fff0f0;color:var(--error)}#message.success{display:block;background:#edf8f0;color:var(--success)}.hint{font-size:.8rem;line-height:1.5;color:var(--muted);margin-top:20px}.register{margin-top:24px;padding-top:20px;border-top:1px solid var(--line);text-align:center}.register p{margin:0 0 10px;color:var(--muted);font-size:.9rem}.register-btn{display:inline-block;background:var(--gold);color:var(--navy);text-decoration:none;font-weight:700;padding:11px 18px;border-radius:9px}.register-btn:hover{background:#c9a24e}.footer{text-align:center;padding:20px 24px 28px;color:var(--muted);font-size:.8rem}
+    .intro .eyebrow{color:#9a3412;font-size:.76rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase}.intro h1{font-size:clamp(2.3rem,5vw,3.8rem);line-height:1.05;color:var(--primary);margin:15px 0}.intro p{font-size:1.08rem;line-height:1.75;color:var(--muted);max-width:550px}
+    .card{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:30px;box-shadow:0 18px 50px #14263d0c}.card h2{margin:0 0 8px;color:var(--primary);font-size:1.55rem}.sub{margin:0 0 24px;color:var(--muted);line-height:1.5;font-size:.94rem}
+    label{display:block;font-weight:700;font-size:.9rem;margin:16px 0 7px}input{width:100%;padding:13px 14px;border:1px solid #c5cdd8;border-radius:9px;background:var(--surface);color:var(--ink);font:inherit}input:focus{outline:3px solid #d8b15f55;border-color:#9a3412}
+    button{width:100%;border:0;border-radius:9px;padding:13px 16px;margin-top:20px;background:var(--primary);color:#fff;font:inherit;font-weight:750;cursor:pointer}button:hover{background:var(--primary-2)}button:disabled{opacity:.6;cursor:wait}.linkbtn{display:block;width:auto;margin:16px auto 0;padding:4px;background:none;color:var(--primary);font-size:.9rem;text-decoration:underline;font-weight:650}.linkbtn:hover{background:none;color:#9a3412}
+    #message{display:none;margin-top:16px;padding:12px;border-radius:8px;font-size:.9rem;line-height:1.5;overflow-wrap:anywhere}#message.error{display:block;background:#fdecea;color:var(--error)}#message.success{display:block;background:#e5f4ea;color:var(--success)}.hint{font-size:.8rem;line-height:1.5;color:var(--muted);margin-top:20px}.register{margin-top:24px;padding-top:20px;border-top:1px solid var(--line);text-align:center}.register p{margin:0 0 10px;color:var(--muted);font-size:.9rem}.register-btn{display:inline-block;background:var(--accent);color:var(--primary);text-decoration:none;font-weight:700;padding:11px 18px;border-radius:9px}.register-btn:hover{background:#ea580c}.footer{text-align:center;padding:20px 24px 28px;color:var(--muted);font-size:.8rem}
     @media(max-width:760px){main{grid-template-columns:1fr;gap:28px;padding-top:36px}.intro h1{font-size:2.6rem}.intro p{font-size:1rem}.card{padding:24px}}
   </style>
+<link rel="stylesheet" href="css/site.css">
+<script src="js/theme.js"></script>
 </head>
 <body>
-  <header><div class="bar"><div class="brand">IELTS <span>ACADEMIC</span> READING</div></div></header>
+  <header class="site-header" id="siteHeader"></header>
+<script src="js/site-nav.js"></script>
   <main>
     <section class="intro"><div class="eyebrow">Student portal</div><h1>Welcome back.</h1><p>Sign in to access your IELTS Academic Reading practice tests and, when available, review your assessment results.</p></section>
     <section class="card" aria-labelledby="login-heading">

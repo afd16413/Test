@@ -5,47 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>IELTS Academic Practice</title>
 <style>
-:root{--navy:#13243a;--gold:#d6ad58;--paper:#f5f3ee;--ink:#202a36;--muted:#667384;--white:#fff}
+:root{--primary:#1d4ed8;--accent:#f97316;--paper:#f8fafc;--ink:#111827;--muted:#374151;--white:#fff}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;min-height:100vh;color:var(--ink);background:var(--paper);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
-header{background:var(--navy);color:var(--white);border-bottom:4px solid var(--gold)}
+header{background:var(--primary);color:var(--white);border-bottom:4px solid var(--accent)}
 .topbar{max-width:1080px;margin:auto;padding:22px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.brand{font-size:1.05rem;font-weight:750;letter-spacing:.02em;color:inherit;text-decoration:none}.brand span{color:var(--gold)}
+.brand{font-size:1.05rem;font-weight:750;letter-spacing:.02em;color:inherit;text-decoration:none}.brand span{color:var(--accent)}
 .navlinks{display:flex;gap:10px;flex-wrap:wrap}
-.navlinks a{color:var(--navy);background:var(--gold);text-decoration:none;font-weight:700;font-size:.9rem;padding:9px 16px;border-radius:8px}
+.navlinks a{color:var(--primary);background:var(--accent);text-decoration:none;font-weight:700;font-size:.9rem;padding:9px 16px;border-radius:8px}
 .navlinks a.alt{background:transparent;color:var(--white);border:1px solid #ffffff66}
-.navlinks button{color:var(--navy);background:var(--gold);border:0;font:inherit;font-weight:700;font-size:.9rem;padding:9px 16px;border-radius:8px;cursor:pointer}
+.navlinks button{color:var(--primary);background:var(--accent);border:0;font:inherit;font-weight:700;font-size:.9rem;padding:9px 16px;border-radius:8px;cursor:pointer}
 main{max-width:960px;width:100%;margin:56px auto;padding:0 24px;flex:1}
-.eyebrow{color:#896a2c;font-weight:750;text-transform:uppercase;letter-spacing:.15em;font-size:.76rem}
-h1{color:var(--navy);font-size:clamp(2.2rem,6vw,4rem);line-height:1.05;margin:14px 0 18px}
+.eyebrow{color:#9a3412;font-weight:750;text-transform:uppercase;letter-spacing:.15em;font-size:.76rem}
+h1{color:var(--primary);font-size:clamp(2.2rem,6vw,4rem);line-height:1.05;margin:14px 0 18px}
 .intro{color:var(--muted);font-size:1.1rem;line-height:1.7;max-width:660px}
-.cta{display:inline-block;margin-top:24px;background:var(--navy);color:var(--white);text-decoration:none;padding:13px 20px;border-radius:9px;font-weight:700}
-.cta:hover{background:#203b58}
+.cta{display:inline-block;margin-top:24px;background:var(--primary);color:var(--white);text-decoration:none;padding:13px 20px;border-radius:9px;font-weight:700}
+.cta:hover{background:#1e40af}
 .skills{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-top:40px}
-.skill{background:var(--white);border:1px solid #e2ded4;border-radius:16px;padding:22px;box-shadow:0 12px 35px #13243a0b}
-.skill h2{margin:0 0 8px;color:var(--navy);font-size:1.2rem}
+.skill{background:var(--white);border:1px solid #dde3ea;border-radius:16px;padding:22px;box-shadow:0 12px 35px #13243a0b}
+.skill h2{margin:0 0 8px;color:var(--primary);font-size:1.2rem}
 .skill p{margin:0;color:var(--muted);line-height:1.6;font-size:.95rem}
+a.skill{display:block;color:inherit;text-decoration:none}
+a.skill:hover{border-color:var(--accent)}
+a.skill:hover h2{text-decoration:underline}
 footer{max-width:960px;width:100%;margin:0 auto;padding:22px 24px 32px;color:var(--muted);font-size:.82rem}
 @media(max-width:600px){main{margin-top:38px}}
 </style>
+<link rel="stylesheet" href="css/site.css">
+<script src="js/theme.js"></script>
 </head>
 <body>
-<header>
-  <div class="topbar">
-    <a class="brand" href="index.html">IELTS <span>ACADEMIC</span> PRACTICE</a>
-    <nav class="navlinks">
-      <a id="navLogin" href="login.html">Login</a>
-      <a id="navRegister" href="register.html">Register</a>
-      <a id="navArea" href="tests.html" hidden>Tests</a>
-      <a id="navAdmin" href="admin.html" hidden>Admin panel</a>
-      <a href="contact.html">Contact</a>
-      <a class="alt" href="results.html">My results</a>
-      <a class="alt" href="reviews.html">Teacher reviews</a>
-      <button id="navSignout" type="button" hidden>Sign out</button>
-    </nav>
-  </div>
-</header>
+<header class="site-header" id="siteHeader"></header>
+<script src="js/site-nav.js"></script>
 <main>
   <div class="eyebrow">Four skills, one platform</div>
   <h1>Practise Listening, Reading, Writing and Speaking.</h1>
@@ -53,22 +45,22 @@ footer{max-width:960px;width:100%;margin:0 auto;padding:22px 24px 32px;color:var
   <a class="cta" href="tests.html">Practice</a>
 
   <section class="skills" aria-label="The four skills">
-    <div class="skill">
+    <a class="skill" href="tests.html?skill=listening">
       <h2>Listening</h2>
       <p>Audio recordings followed by questions, marked automatically.</p>
-    </div>
-    <div class="skill">
+    </a>
+    <a class="skill" href="tests.html?skill=reading">
       <h2>Reading</h2>
       <p>Academic passages with question types such as True / False / Not Given and gap filling.</p>
-    </div>
-    <div class="skill">
+    </a>
+    <a class="skill" href="tests.html?skill=writing">
       <h2>Writing</h2>
       <p>Task 1 and Task 2 with a word counter, reviewed by your teacher.</p>
-    </div>
-    <div class="skill">
+    </a>
+    <a class="skill" href="tests.html?skill=speaking">
       <h2>Speaking</h2>
       <p>Record your answers in the browser, then your teacher reviews them.</p>
-    </div>
+    </a>
   </section>
 </main>
 <footer>IELTS Academic Practice · Practice platform</footer>
@@ -81,21 +73,6 @@ footer{max-width:960px;width:100%;margin:0 auto;padding:22px 24px 32px;color:var
       'https://yfsxbiqszvrqhsdcuwyr.supabase.co',
       'sb_publishable_W1BJsbUOZdR0dm5Ai_yHJg_J64HYtPH'
     );
-    client.auth.getSession().then(({ data }) => {
-      if (!data.session) return;
-      document.getElementById('navLogin').hidden = true;
-      document.getElementById('navRegister').hidden = true;
-      document.getElementById('navArea').hidden = false;
-      document.getElementById('navSignout').hidden = false;
-      client.from('admins').select('user_id').eq('user_id', data.session.user.id).maybeSingle()
-        .then(({ data: admin }) => { if (admin) document.getElementById('navAdmin').hidden = false; });
-    }).catch(() => {});
-
-    // Signing out here keeps the visitor on the home page, now showing the signed-out links.
-    document.getElementById('navSignout').addEventListener('click', async () => {
-      await client.auth.signOut();
-      window.location.reload();
-    });
   }
 </script>
 </body>

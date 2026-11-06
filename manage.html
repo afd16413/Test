@@ -5,52 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Manage tests | IELTS Academic Reading</title>
 <style>
-:root{--navy:#14263d;--gold:#d8b15f;--paper:#f4f2ed;--muted:#657385;--line:#e2ded5;--danger:#a52b35}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;background:var(--paper);color:#202b38;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
-header{background:var(--navy);color:#fff;border-bottom:4px solid var(--gold)}
-.bar,main{max-width:960px;margin:auto;padding:22px 24px}
-.bar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
-.brand{font-weight:800;letter-spacing:.04em;color:inherit;text-decoration:none}.brand span{color:var(--gold)}
-.bar nav{display:flex;gap:10px;align-items:center}
-.bar a,.bar button{border:0;border-radius:8px;background:#fff;color:var(--navy);padding:9px 14px;font:inherit;font-weight:700;text-decoration:none;cursor:pointer}
-main{padding-top:40px}
-h1,h2{color:var(--navy)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:960px;margin:auto;padding:40px 24px}
+h1,h2{color:var(--primary)}
 h1{margin:0 0 6px}
 p{line-height:1.6;color:var(--muted)}
 #status{overflow-wrap:anywhere}
-.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:20px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:20px}
 .move{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.move input{flex:1;min-width:220px;padding:10px 12px;border:1px solid #cbd2da;border-radius:8px;font:inherit}
-.move button{border:0;border-radius:8px;background:var(--navy);color:#fff;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}
-.move button.secondary{background:#fff;color:var(--navy);border:1px solid #cbd2da}
+.move input{flex:1;min-width:220px;padding:10px 12px;border:1px solid var(--line-2);border-radius:8px;font:inherit;background:var(--surface);color:var(--text)}
+.move button{border:0;border-radius:8px;background:var(--primary);color:#fff;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}
+.move button.secondary{background:var(--surface);color:var(--primary);border:1px solid var(--line-2)}
 .move button:disabled{opacity:.6}
 #count{margin-top:10px;font-size:.9rem}
 .divider{border:0;border-top:1px solid var(--line);margin:18px 0}
 .group{margin-top:26px}
-.group h2{margin:0 0 8px;padding-bottom:4px;border-bottom:2px solid var(--gold);font-size:1.2rem}
-.add-link{display:inline-block;margin-left:10px;padding:5px 10px;border-radius:6px;background:var(--gold);color:var(--navy);font-size:.85rem;font-weight:700;text-decoration:none;vertical-align:middle}
-.remove-link{margin-left:8px;padding:5px 10px;border:1px solid var(--danger);border-radius:6px;background:#fff;color:var(--danger);font:inherit;font-size:.85rem;font-weight:700;cursor:pointer;vertical-align:middle}
+.group h2{margin:0 0 8px;padding-bottom:4px;border-bottom:2px solid var(--accent);font-size:1.2rem}
+.empty,.group p{color:var(--muted)}
+.add-link{display:inline-block;margin-left:10px;padding:5px 10px;border-radius:6px;background:var(--accent);color:var(--primary);font-size:.85rem;font-weight:700;text-decoration:none;vertical-align:middle}
+.remove-link{margin-left:8px;padding:5px 10px;border:1px solid var(--danger);border-radius:6px;background:var(--surface);color:var(--danger);font:inherit;font-size:.85rem;font-weight:700;cursor:pointer;vertical-align:middle}
 .empty{font-size:.95rem;margin:8px 0 0}
-.test{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;margin-top:8px;cursor:pointer}
+.subgroup{margin:18px 0 0;padding-left:12px;border-left:3px solid var(--line)}
+.subgroup h3{margin:0;color:var(--text);font-size:1rem}
+.subgroup .empty{color:var(--muted)}
+.test{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-top:8px;cursor:pointer}
 .test input{width:18px;height:18px;flex:0 0 auto}
-.test strong{display:block;color:var(--navy)}
+.test strong{display:block;color:var(--primary)}
 .test small{color:var(--muted)}
 .error{color:var(--danger)}
 </style>
+<link rel="stylesheet" href="css/site.css">
+<script src="js/theme.js"></script>
 </head>
 <body>
-<header>
-  <div class="bar">
-    <a class="brand" href="tests.html">IELTS <span>ACADEMIC</span> READING</a>
-    <nav>
-      <a href="tests.html">Tests</a>
-      <a id="navAdmin" href="admin.html" hidden>Admin panel</a>
-      <button id="signout" type="button">Sign out</button>
-    </nav>
-  </div>
-</header>
+<header class="site-header" id="siteHeader"></header>
+<script src="js/site-nav.js"></script>
 <main>
   <h1>Manage tests</h1>
   <p id="status">Checking your session…</p>
@@ -84,6 +75,7 @@ const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_W1BJsbUOZdR0dm5Ai_yHJg_J64HYtPH
 const $ = id => document.getElementById(id);
 const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const UNGROUPED = 'Ungrouped';
+const KINDS = [['reading', 'Reading Tests'], ['listening', 'Listening Tests'], ['writing', 'Writing Tests'], ['speaking', 'Speaking Tests']];
 
 if (!window.supabase) {
   $('status').textContent = 'Could not load the Supabase client library. Check your connection and refresh.';
@@ -116,16 +108,21 @@ if (!window.supabase) {
         ? ` <a class="add-link" href="editor.html?series=${encodeURIComponent(name)}">+ Add test</a>` : '';
       const removeBtn = name !== UNGROUPED
         ? ` <button class="remove-link" type="button" data-remove="${esc(name)}">Remove group</button>` : '';
-      const body = items.length
-        ? items.map(t => `
-          <label class="test">
-            <input type="checkbox" value="${esc(t.id)}">
-            <span>
-              <strong>${esc(t.label || t.title)}</strong>
-              <small>${esc(t.minutes)} min · ${esc((t.kind || 'reading').replace(/^./, c => c.toUpperCase()))}</small>
-            </span>
-          </label>`).join('')
-        : '<p class="empty">No tests in this group yet.</p>';
+      // Inside each group, the tests are sorted into sub groups by type: Reading Tests, Writing Tests, and so on.
+      const body = KINDS.map(([kind, title]) => {
+        const its = items.filter(t => (t.kind || 'reading') === kind);
+        const rows = its.length
+          ? its.map(t => `
+            <label class="test">
+              <input type="checkbox" value="${esc(t.id)}">
+              <span>
+                <strong>${esc(t.label || t.title)}</strong>
+                <small>${esc(t.minutes)} min</small>
+              </span>
+            </label>`).join('')
+          : '<p class="empty">No tests yet.</p>';
+        return `<div class="subgroup"><h3>${title}</h3>${rows}</div>`;
+      }).join('');
       return `<section class="group"><h2>${esc(name)}${addLink}${removeBtn}</h2>${body}</section>`;
     }).join('') || '<p>No tests yet.</p>';
     updateCount();
@@ -195,7 +192,6 @@ if (!window.supabase) {
     if (!admin) { window.location.replace('tests.html'); return; }
 
     $('status').textContent = 'Signed in as ' + session.session.user.email + '.';
-    $('navAdmin').hidden = false;
     $('panel').hidden = false;
 
     $('moveBtn').addEventListener('click', () => {
@@ -218,10 +214,6 @@ if (!window.supabase) {
 
   init().catch(err => { $('status').textContent = 'Something went wrong: ' + (err.message || err); });
 
-  $('signout').addEventListener('click', async () => {
-    await client.auth.signOut();
-    window.location.replace('login.html');
-  });
 }
 </script>
 </body>

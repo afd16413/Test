@@ -3,64 +3,145 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>My results | IELTS Academic Reading</title>
+<title>My results | IELTS Academic Practice</title>
 <style>
-:root{--navy:#13243a;--gold:#d6ad58;--paper:#f5f3ee;--ink:#202a36;--muted:#667384}
-*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
-header{background:var(--navy);color:#fff;border-bottom:4px solid var(--gold)}
-.bar{max-width:960px;margin:auto;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
-.brand{font-weight:750}.brand span{color:var(--gold)}
-.bar a{color:var(--navy);background:var(--gold);text-decoration:none;font-weight:700;padding:8px 14px;border-radius:8px;font-size:.9rem}
-main{max-width:960px;margin:40px auto;padding:0 24px}
-h1{color:var(--navy);margin:0 0 6px}.sub{color:var(--muted);margin:0 0 24px}
-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2ded4;border-radius:12px;overflow:hidden}
-th,td{padding:12px 14px;text-align:left;border-bottom:1px solid #eee;font-size:.95rem}
-th{background:#faf8f3;color:var(--navy)}
-.empty,.msg{background:#fff;border:1px solid #e2ded4;border-radius:12px;padding:20px;color:var(--muted)}
-.msg.error{color:#a52b35}
+[hidden]{display:none!important}
+main{max-width:960px;margin:auto;padding:40px 24px}
+h1{margin:0 0 6px}
+.sub{color:var(--muted);margin:0 0 28px}
+h2{font-size:1.2rem;margin:36px 0 12px}
+.table-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:auto}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px 14px;text-align:left;font-size:.95rem}
+.review{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;margin-top:14px}
+.review .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:14px}
+.review h3{margin:0;color:var(--primary);font-size:1.1rem}
+.meta{color:var(--muted);font-size:.9rem;margin-top:4px}
+.band{background:var(--primary);color:#fff;border-radius:10px;padding:8px 14px;text-align:center;min-width:90px}
+.band b{display:block;font-size:1.5rem;color:var(--accent)}
+.band small{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase}
+.label{font-weight:700;color:var(--primary);font-size:.9rem;margin:0 0 6px}
+.comment{white-space:pre-wrap;line-height:1.7;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:0}
+.nocomment{color:var(--muted);font-style:italic;margin:0}
+details{margin-top:14px}
+summary{cursor:pointer;color:var(--primary);font-weight:700;font-size:.92rem}
+.answer{white-space:pre-wrap;line-height:1.7;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:10px 0 0;font-size:.95rem}
+.empty{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;color:var(--muted)}
+footer{max-width:960px;margin:0 auto;padding:22px 24px 32px;color:var(--muted);font-size:.82rem}
 </style>
+<link rel="stylesheet" href="css/site.css">
+<script src="js/theme.js"></script>
 </head>
 <body>
-<header><div class="bar"><div class="brand">IELTS <span>ACADEMIC</span> READING</div><nav style="display:flex;gap:10px;flex-wrap:wrap"><a href="reviews.html">Teacher reviews</a><a href="index.html">Home</a></nav></div></header>
+<header class="site-header" id="siteHeader"></header>
+<script src="js/site-nav.js"></script>
 <main>
   <h1>My results</h1>
   <p class="sub" id="who">Checking your session…</p>
+
   <div id="content"></div>
+
+  <h2>Teacher comments</h2>
+  <div id="reviews"></div>
 </main>
+<footer>IELTS Academic Practice · Practice platform</footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = 'https://yfsxbiqszvrqhsdcuwyr.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_W1BJsbUOZdR0dm5Ai_yHJg_J64HYtPH';
 const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const content = document.getElementById('content');
-const who = document.getElementById('who');
+const $ = id => document.getElementById(id);
+const KIND_NAMES = { reading: 'Reading', listening: 'Listening', writing: 'Writing', speaking: 'Speaking' };
+const TEST_NAMES = { 'academic-reading-17-test-1': 'Academic Reading 17 Test 1' };
 
-const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+if (!window.supabase) {
+  $('content').innerHTML = '<div class="empty">Could not load the Supabase client library. Check your connection and refresh.</div>';
+} else {
+  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-client.auth.getSession().then(async ({ data }) => {
-  if (!data.session) { window.location.replace('login.html'); return; }
-  who.textContent = 'Signed in as ' + data.session.user.email;
-
-  const { data: rows, error } = await client
-    .from('results')
-    .select('test_id, score, total, submitted_at')
-    .order('submitted_at', { ascending: false });
-
-  if (error) {
-    content.innerHTML = '<div class="msg error">Could not load your results: ' + esc(error.message) + '</div>';
-    return;
+  // Writing answers are stored as a list of tasks; other kinds have no text answer to show.
+  function answerText(s) {
+    if (s.kind !== 'writing' || !Array.isArray(s.answers)) return '';
+    return s.answers.map(a => `Task ${a.task}: ${a.title}\n\n${a.text || '(no answer)'}`).join('\n\n———\n\n');
   }
-  if (!rows.length) {
-    content.innerHTML = '<div class="empty">No saved results yet. Complete a test while signed in to see it here.</div>';
-    return;
+
+  function reviewCard(s, testTitles) {
+    const testName = testTitles[s.test_id] || TEST_NAMES[s.test_id] || s.test_id;
+    const kind = KIND_NAMES[s.kind] || s.kind;
+    const bandBox = s.band != null ? `<div class="band"><small>Band</small><b>${esc(Number(s.band).toFixed(1))}</b></div>` : '';
+    const comment = s.teacher_comment
+      ? `<p class="label">Teacher comment</p><p class="comment">${esc(s.teacher_comment)}</p>`
+      : `<p class="nocomment">The teacher has not written a comment for this one.</p>`;
+    const answer = answerText(s);
+    const answerBlock = answer
+      ? `<details><summary>Show my answer</summary><p class="answer">${esc(answer)}</p></details>`
+      : '';
+    return `<article class="review">
+      <div class="head">
+        <div>
+          <h3>${esc(testName)} · ${esc(kind)}</h3>
+          <div class="meta">Submitted ${esc(new Date(s.created_at).toLocaleString())} · Reviewed ${esc(new Date(s.reviewed_at).toLocaleString())}</div>
+        </div>
+        ${bandBox}
+      </div>
+      ${comment}
+      ${answerBlock}
+    </article>`;
   }
-  content.innerHTML = '<table><thead><tr><th>Test</th><th>Score</th><th>Percent</th><th>Date</th></tr></thead><tbody>' +
-    rows.map(r => {
-      const pct = r.total ? Math.round(r.score / r.total * 100) : 0;
-      const date = new Date(r.submitted_at).toLocaleString();
-      return `<tr><td>${esc(r.test_id)}</td><td>${r.score} / ${r.total}</td><td>${pct}%</td><td>${esc(date)}</td></tr>`;
-    }).join('') + '</tbody></table>';
-});
+
+  async function loadResults(uid, testTitles) {
+    const { data: rows, error } = await client
+      .from('results')
+      .select('test_id, score, total, submitted_at')
+      .order('submitted_at', { ascending: false });
+
+    if (error) {
+      $('content').innerHTML = '<div class="empty">Could not load your results: ' + esc(error.message) + '</div>';
+      return;
+    }
+    if (!rows.length) {
+      $('content').innerHTML = '<div class="empty">No saved results yet. Complete a test while signed in to see it here.</div>';
+      return;
+    }
+    $('content').innerHTML = '<div class="table-wrap"><table><thead><tr><th>Test</th><th>Score</th><th>Percent</th><th>Date</th></tr></thead><tbody>' +
+      rows.map(r => {
+        const pct = r.total ? Math.round(r.score / r.total * 100) : 0;
+        const name = testTitles[r.test_id] || TEST_NAMES[r.test_id] || r.test_id;
+        return `<tr><td>${esc(name)}</td><td>${r.score} / ${r.total}</td><td>${pct}%</td><td>${esc(new Date(r.submitted_at).toLocaleString())}</td></tr>`;
+      }).join('') + '</tbody></table></div>';
+  }
+
+  async function loadReviews(uid, testTitles) {
+    const { data: subs, error } = await client
+      .from('submissions')
+      .select('id,test_id,kind,answers,band,teacher_comment,reviewed_at,created_at')
+      .eq('user_id', uid)
+      .not('reviewed_at', 'is', null)
+      .order('reviewed_at', { ascending: false });
+
+    if (error) {
+      $('reviews').innerHTML = '<div class="empty">Could not load teacher comments: ' + esc(error.message) + '</div>';
+      return;
+    }
+    if (!subs.length) {
+      $('reviews').innerHTML = '<div class="empty">No teacher comments yet. When your teacher reviews an answer, the comment will appear here.</div>';
+      return;
+    }
+    $('reviews').innerHTML = subs.map(s => reviewCard(s, testTitles)).join('');
+  }
+
+  client.auth.getSession().then(async ({ data }) => {
+    if (!data.session) { window.location.replace('login.html'); return; }
+    const uid = data.session.user.id;
+    $('who').textContent = 'Signed in as ' + data.session.user.email;
+    const { data: tests } = await client.from('tests').select('id,title');
+    const testTitles = {};
+    (tests || []).forEach(t => { testTitles[t.id] = t.title; });
+    await Promise.all([loadResults(uid, testTitles), loadReviews(uid, testTitles)]);
+  }).catch(err => {
+    $('content').innerHTML = '<div class="empty">Something went wrong: ' + esc(err.message || err) + '</div>';
+  });
+}
 </script>
 </body>
 </html>
