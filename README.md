@@ -1,3 +1,3 @@
 # Test
 Test
-https://afd16413.github.io/Test/
+afd16413.github.io/academic-test-prep/
